@@ -5,8 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Structure
 
 This is a full-stack application with two main components:
-- **pb/**: PocketBase backend server (Go)
-- **sk/**: SvelteKit frontend application (TypeScript/Svelte)
+- **pb/**: PocketBase backend server (Go) - handles API, database, auth, file storage
+- **sk/**: SvelteKit frontend application (TypeScript/Svelte) - builds to static files only
+
+**Important**: The SvelteKit app is configured as a fully static application with NO Node.js backend. All backend functionality is handled by PocketBase. The SvelteKit build produces static HTML/CSS/JS files that are served by PocketBase.
 
 ## Development Commands
 
@@ -29,7 +31,7 @@ npm run storybook    # Start Storybook development server
 ```bash
 cd pb
 go build            # Build the PocketBase binary
-./pocketbase serve --dev --http 0.0.0.0:8090 --publicDir ../sk/build
+./pocketbase serve --dev --http 0.0.0.0:8090
 ```
 
 For development with auto-reload, use `modd` (if installed):
@@ -47,8 +49,11 @@ modd               # Watch Go files and auto-restart server
 - Uses `modd.conf` for development auto-reload
 
 ### Frontend (SvelteKit)
-- Uses SvelteKit with TypeScript and Tailwind CSS
-- Configured as static site adapter (`@sveltejs/adapter-static`)
+- Fully static SvelteKit application (NO Node.js server-side rendering)
+- **Svelte 5 with runes** - Use modern reactive syntax ($state, $derived, $effect, etc.)
+- Uses TypeScript and Tailwind CSS
+- Configured with `@sveltejs/adapter-static` for static file generation
+- All API calls go directly to PocketBase backend
 - Internationalization with Paraglide (English and French)
 - Testing setup with Vitest (unit) and Playwright (e2e)
 - Storybook for component development
@@ -56,9 +61,10 @@ modd               # Watch Go files and auto-restart server
 
 ### Key Frontend Features
 - **Internationalization**: Paraglide middleware handles locale routing and message interpolation
-- **Component Library**: Storybook setup for isolated component development
+- **Component Library**: Uses shadcn-svelte components from https://www.shadcn-svelte.com/docs/components
 - **Testing**: Comprehensive testing with unit tests (Vitest) and e2e tests (Playwright)
-- **Styling**: Tailwind CSS with typography plugin
+- **Styling**: Tailwind CSS with dark/light theme support and typography plugin
+- **UI Components**: Prefer shadcn-svelte components for consistent design system
 
 ### File Structure Notes
 - Messages for i18n are in `sk/messages/{locale}.json`
@@ -86,3 +92,57 @@ For development, run tests individually:
 npm run test:unit   # Faster feedback during development
 npm run test:e2e    # Integration testing
 ```
+
+## UI Development Guidelines
+
+### Component Library
+- Use shadcn-svelte components from https://www.shadcn-svelte.com/docs/components
+- Install components via the CLI: `npx shadcn-svelte@latest add <component-name>`
+- Components are copied into your project and fully customizable
+
+### Theme Support
+- Implement dark/light theme switching using Tailwind CSS
+- Use CSS custom properties for theme-aware colors
+- Follow shadcn-svelte theming conventions for consistency
+- Test components in both light and dark modes
+
+### Styling Best Practices
+- Use Tailwind utility classes for styling
+- Leverage shadcn-svelte's design tokens and color system
+- Maintain consistent spacing and typography scales
+- Use the typography plugin for rich text content
+
+## Svelte 5 Development Guidelines
+
+### Runes Usage
+- **ALWAYS use Svelte 5 runes** - No legacy reactive syntax
+- Use `$state()` for reactive variables instead of `let` variables
+- Use `$derived()` for computed values instead of `$:`
+- Use `$effect()` for side effects instead of `$:`
+- Use `$props()` for component props instead of `export let`
+- Use `{@render children()}` for slot content
+
+### Component Patterns
+```svelte
+<script lang="ts">
+  // Props
+  let { title, count = 0 }: { title: string; count?: number } = $props();
+  
+  // State
+  let localCount = $state(0);
+  
+  // Derived values
+  let doubled = $derived(localCount * 2);
+  
+  // Effects
+  $effect(() => {
+    console.log('Count changed:', localCount);
+  });
+</script>
+```
+
+### Migration Notes
+- Convert all `export let` to `$props()`
+- Convert reactive statements `$:` to `$derived()` or `$effect()`
+- Update event handlers to use modern syntax
+- Use `{@render children()}` instead of `<slot>`

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 
 	let { children } = $props();
 </script>
@@ -19,7 +20,7 @@
 				<div class="flex items-center space-x-4">
 					<a href="/" class="hover:text-primary transition-colors">Home</a>
 					<a href="/about" class="hover:text-primary transition-colors">About</a>
-					<!-- Theme toggle will go here -->
+					<ThemeToggle />
 				</div>
 			</nav>
 		</div>

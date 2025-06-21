@@ -17,6 +17,7 @@
 				<a href="/" class="hover:text-primary transition-colors">Home</a>
 				<a href="/about" class="hover:text-primary transition-colors">About</a>
 				<a href="/login" class="hover:text-primary transition-colors">Login</a>
+				<a href="/signup" class="hover:text-primary transition-colors">Sign Up</a>
 				<ThemeToggle />
 			</div>
 		</nav>

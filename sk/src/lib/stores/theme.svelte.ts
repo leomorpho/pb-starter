@@ -4,16 +4,18 @@ type Theme = 'light' | 'dark';
 
 class ThemeStore {
 	private _theme = $state<Theme>('light');
-	
+
 	constructor() {
 		if (browser) {
 			// Get theme from localStorage or system preference
 			const stored = localStorage.getItem('theme') as Theme;
-			const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-			
+			const systemPreference = window.matchMedia('(prefers-color-scheme: dark)').matches
+				? 'dark'
+				: 'light';
+
 			this._theme = stored || systemPreference;
 			this.updateDOM();
-			
+
 			// Listen for system theme changes
 			window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
 				if (!localStorage.getItem('theme')) {
@@ -23,11 +25,11 @@ class ThemeStore {
 			});
 		}
 	}
-	
+
 	get theme(): Theme {
 		return this._theme;
 	}
-	
+
 	set theme(value: Theme) {
 		this._theme = value;
 		if (browser) {
@@ -35,11 +37,11 @@ class ThemeStore {
 			this.updateDOM();
 		}
 	}
-	
+
 	toggle() {
 		this.theme = this._theme === 'light' ? 'dark' : 'light';
 	}
-	
+
 	private updateDOM() {
 		const root = document.documentElement;
 		root.classList.remove('light', 'dark');

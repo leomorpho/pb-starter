@@ -7,7 +7,8 @@
 		<script>
 			// Prevent flash of unstyled content (FOUC) by setting theme immediately
 			try {
-				const theme = localStorage.getItem('theme') || 
+				const theme =
+					localStorage.getItem('theme') ||
 					(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 				document.documentElement.classList.remove('light', 'dark');
 				document.documentElement.classList.add(theme);

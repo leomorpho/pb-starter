@@ -1,6 +1,13 @@
 <script lang="ts">
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-	import { Home, Info, LogIn } from 'lucide-svelte';
+	import { Home, Info, LogIn, LogOut, User } from 'lucide-svelte';
+	import { authStore } from '$lib/stores/auth.svelte.js';
+	import { goto } from '$app/navigation';
+
+	function handleLogout() {
+		authStore.logout();
+		goto('/');
+	}
 </script>
 
 <header class="border-b">
@@ -8,22 +15,48 @@
 		<nav class="flex items-center justify-between">
 			<div class="flex items-center space-x-4">
 				<h1 class="text-xl font-semibold">
-					<a href="/" class="hover:text-primary transition-colors">
-						App Name
-					</a>
+					<a href="/" class="hover:text-primary transition-colors"> App Name </a>
 				</h1>
 			</div>
-			
+
 			<div class="flex items-center space-x-2">
-				<a href="/" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 w-9" title="Home">
+				<a
+					href="/"
+					class="hover:bg-accent hover:text-accent-foreground inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium whitespace-nowrap transition-colors"
+					title="Home"
+				>
 					<Home class="h-4 w-4" />
 				</a>
-				<a href="/about" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 w-9" title="About">
+				<a
+					href="/about"
+					class="hover:bg-accent hover:text-accent-foreground inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium whitespace-nowrap transition-colors"
+					title="About"
+				>
 					<Info class="h-4 w-4" />
 				</a>
-				<a href="/login" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 w-9" title="Sign In">
-					<LogIn class="h-4 w-4" />
-				</a>
+
+				{#if authStore.isLoggedIn}
+					<div class="flex items-center space-x-2 text-sm">
+						<User class="h-4 w-4" />
+						<span>Welcome, {authStore.user?.name || authStore.user?.email}</span>
+					</div>
+					<button
+						onclick={handleLogout}
+						class="hover:bg-accent hover:text-accent-foreground inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium whitespace-nowrap transition-colors"
+						title="Sign Out"
+					>
+						<LogOut class="h-4 w-4" />
+					</button>
+				{:else}
+					<a
+						href="/login"
+						class="hover:bg-accent hover:text-accent-foreground inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium whitespace-nowrap transition-colors"
+						title="Sign In"
+					>
+						<LogIn class="h-4 w-4" />
+					</a>
+				{/if}
+
 				<ThemeToggle />
 			</div>
 		</nav>

@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { themeStore } from '$lib/stores/theme.svelte.js';
-	
+
 	let { size = 'default' }: { size?: 'sm' | 'default' | 'lg' } = $props();
-	
+
 	const sizeClasses = {
 		sm: 'h-4 w-4',
 		default: 'h-5 w-5',
 		lg: 'h-6 w-6'
 	};
-	
+
 	const buttonSizeClasses = {
 		sm: 'p-1',
 		default: 'p-2',
@@ -18,7 +18,9 @@
 
 <button
 	onclick={() => themeStore.toggle()}
-	class="inline-flex items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground {buttonSizeClasses[size]}"
+	class="hover:bg-accent hover:text-accent-foreground inline-flex items-center justify-center rounded-md transition-colors {buttonSizeClasses[
+		size
+	]}"
 	aria-label="Toggle theme"
 	title="Toggle between light and dark mode"
 >

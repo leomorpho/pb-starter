@@ -60,31 +60,11 @@
 <div class={cn('flex flex-col gap-6', className)} bind:this={ref} {...restProps}>
 	<form onsubmit={handleSubmit}>
 		<div class="flex flex-col gap-6">
-			<div class="flex flex-col items-center gap-2">
-				<a href="/" class="flex flex-col items-center gap-2 font-medium">
-					<div class="flex size-8 items-center justify-center rounded-md">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="size-6"
-						>
-							<rect width="7" height="18" x="3" y="3" rx="1" />
-							<rect width="7" height="7" x="14" y="3" rx="1" />
-							<rect width="7" height="7" x="14" y="14" rx="1" />
-						</svg>
-					</div>
-					<span class="sr-only">App Name</span>
-				</a>
-				<h1 class="text-xl font-bold">Create your account</h1>
-				<div class="text-center text-sm">
-					Already have an account?
-					<a href="/login" class="underline underline-offset-4"> Sign in </a>
-				</div>
+			<div class="flex flex-col items-center gap-3 text-center">
+				<h1 class="text-2xl font-semibold tracking-tight">Create your account</h1>
+				<p class="text-sm text-muted-foreground">
+					Enter your details to get started
+				</p>
 			</div>
 
 			{#if error}

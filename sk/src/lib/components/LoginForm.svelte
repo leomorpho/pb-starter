@@ -4,7 +4,7 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { cn, type WithElementRef } from '$lib/utils.js';
-	import { authStore } from '$lib/stores/auth.svelte.js';
+	import { authStore } from '$lib/stores/authClient.svelte.js';
 	import { goto } from '$app/navigation';
 
 	let {

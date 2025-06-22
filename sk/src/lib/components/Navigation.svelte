@@ -1,13 +1,22 @@
 <script lang="ts">
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { Home, Info, LogIn, LogOut, User } from 'lucide-svelte';
-	import { authStore } from '$lib/stores/auth.svelte.js';
-	import { goto } from '$app/navigation';
+	import { authStore } from '$lib/stores/authClient.svelte.js';
 
 	function handleLogout() {
+		console.log('🚪 Logout clicked');
 		authStore.logout();
-		goto('/');
+		console.log('🚪 Logout completed');
 	}
+
+	// Debug: Log reactive updates
+	$effect(() => {
+		console.log('📱 Navigation reactive update:', {
+			isLoggedIn: authStore.isLoggedIn,
+			user: authStore.user?.email,
+			initialized: authStore.initialized
+		});
+	});
 </script>
 
 <header class="border-b">

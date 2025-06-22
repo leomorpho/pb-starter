@@ -1,6 +1,6 @@
 <script lang="ts">
 	import SignupForm from '$lib/components/SignupForm.svelte';
-	import { authStore } from '$lib/stores/auth.svelte.js';
+	import { authStore } from '$lib/stores/authClient.svelte.js';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 

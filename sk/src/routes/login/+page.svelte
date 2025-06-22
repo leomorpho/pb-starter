@@ -1,6 +1,6 @@
 <script lang="ts">
 	import LoginForm from '$lib/components/LoginForm.svelte';
-	import { authStore } from '$lib/stores/auth.svelte.js';
+	import { authStore } from '$lib/stores/authClient.svelte.js';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 

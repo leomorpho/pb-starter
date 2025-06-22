@@ -1,0 +1,174 @@
+import { pb } from '$lib/pocketbase.js';
+import type { AuthModel } from 'pocketbase';
+import { browser } from '$app/environment';
+
+class ClientAuthStore {
+	#user = $state<AuthModel | null>(null);
+	#isValid = $state(false);
+	#isLoading = $state(true);
+	#initialized = $state(false);
+
+	constructor() {
+		if (browser) {
+			// Initialize immediately on browser
+			this.#initializeAuth();
+		}
+	}
+
+	#initializeAuth() {
+		console.log('🔧 Initializing auth store...');
+		// PocketBase automatically loads from localStorage on instantiation
+		// We just need to sync our reactive state
+		this.#user = pb.authStore.model;
+		this.#isValid = pb.authStore.isValid;
+		this.#isLoading = false;
+		this.#initialized = true;
+
+		console.log('🔧 Initial auth state:', {
+			user: this.#user?.email,
+			isValid: this.#isValid,
+			isLoggedIn: this.#user !== null && this.#isValid
+		});
+
+		// Listen for PocketBase auth changes
+		pb.authStore.onChange(() => {
+			console.log('🔄 PocketBase onChange triggered:', {
+				oldUser: this.#user?.email,
+				newUser: pb.authStore.model?.email,
+				oldValid: this.#isValid,
+				newValid: pb.authStore.isValid
+			});
+			this.#user = pb.authStore.model;
+			this.#isValid = pb.authStore.isValid;
+			console.log('✅ Auth store updated:', {
+				user: this.#user?.email,
+				isValid: this.#isValid,
+				isLoggedIn: this.#user !== null && this.#isValid
+			});
+		});
+
+		// Try to refresh auth if we have a token
+		if (pb.authStore.isValid) {
+			this.#refreshAuth();
+		}
+	}
+
+	async #refreshAuth() {
+		try {
+			if (pb.authStore.isValid) {
+				await pb.collection('users').authRefresh();
+			}
+		} catch (error) {
+			console.error('Auth refresh failed:', error);
+			// Don't clear on refresh failure - token might still be valid for a while
+		}
+	}
+
+	get user() {
+		// Ensure initialization if not done yet
+		if (browser && !this.#initialized) {
+			this.#initializeAuth();
+		}
+		return this.#user;
+	}
+
+	get isLoggedIn() {
+		// Ensure initialization if not done yet
+		if (browser && !this.#initialized) {
+			this.#initializeAuth();
+		}
+		return this.#user !== null && this.#isValid;
+	}
+
+	get isLoading() {
+		return this.#isLoading;
+	}
+
+	get initialized() {
+		return this.#initialized;
+	}
+
+	async login(email: string, password: string) {
+		try {
+			console.log('🔐 Starting login...');
+			const authData = await pb.collection('users').authWithPassword(email, password);
+			console.log('🔐 Login successful, PocketBase state:', {
+				isValid: pb.authStore.isValid,
+				model: pb.authStore.model?.email
+			});
+
+			// Manual sync to ensure reactive state updates immediately
+			this.syncState();
+			console.log('🔐 After manual sync, auth store state:', {
+				user: this.#user?.email,
+				isValid: this.#isValid,
+				isLoggedIn: this.isLoggedIn
+			});
+
+			// PocketBase automatically saves to localStorage and triggers onChange
+			return { success: true, user: authData.record };
+		} catch (error) {
+			console.error('❌ Login error:', error);
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : 'Login failed'
+			};
+		}
+	}
+
+	async signup(email: string, password: string, passwordConfirm: string, name?: string) {
+		try {
+			const data = {
+				email,
+				password,
+				passwordConfirm,
+				...(name && { name })
+			};
+
+			await pb.collection('users').create(data);
+
+			// Auto-login after signup
+			const authData = await pb.collection('users').authWithPassword(email, password);
+
+			// Manual sync to ensure reactive state updates immediately
+			this.syncState();
+
+			// PocketBase automatically saves to localStorage and triggers onChange
+			return { success: true, user: authData.record };
+		} catch (error) {
+			console.error('Signup error:', error);
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : 'Signup failed'
+			};
+		}
+	}
+
+	logout() {
+		console.log('🚪 Starting logout...');
+		// PocketBase automatically clears localStorage and triggers onChange
+		pb.authStore.clear();
+		console.log('🚪 Logout completed, PocketBase state:', {
+			isValid: pb.authStore.isValid,
+			model: pb.authStore.model
+		});
+
+		// Manual sync in case onChange doesn't fire immediately
+		this.syncState();
+
+		// Force page reload to ensure clean state
+		if (browser) {
+			window.location.href = '/';
+		}
+	}
+
+	// Manual method to sync state (for edge cases)
+	syncState() {
+		if (browser) {
+			this.#user = pb.authStore.model;
+			this.#isValid = pb.authStore.isValid;
+		}
+	}
+}
+
+export const authStore = new ClientAuthStore();

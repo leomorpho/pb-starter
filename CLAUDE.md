@@ -8,7 +8,13 @@ This is a full-stack application with two main components:
 - **pb/**: PocketBase backend server (Go) - handles API, database, auth, file storage
 - **sk/**: SvelteKit frontend application (TypeScript/Svelte) - builds to static files only
 
-**Important**: The SvelteKit app is configured as a fully static application with NO Node.js backend. All backend functionality is handled by PocketBase. The SvelteKit build produces static HTML/CSS/JS files that are served by PocketBase.
+**CRITICAL**: The SvelteKit app is configured as a fully static application with **ABSOLUTELY NO Node.js backend**. All backend functionality is handled by PocketBase. The SvelteKit build produces static HTML/CSS/JS files that are served by PocketBase.
+
+**⚠️ IMPORTANT CONSTRAINTS:**
+- **NO SERVER-SIDE CODE**: No server hooks, no server load functions, no API routes in SvelteKit
+- **CLIENT-SIDE ONLY**: All authentication, routing, and logic must be client-side
+- **STATIC BUILD**: Must work with `@sveltejs/adapter-static` and static file serving
+- **PocketBase ONLY**: Any backend endpoints or auth logic must be added to the Go PocketBase code in `pb/` directory
 
 ## Development Commands
 

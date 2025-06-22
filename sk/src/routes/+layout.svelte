@@ -1,15 +1,8 @@
 <script lang="ts">
 	import '../app.css';
 	import Navigation from '$lib/components/Navigation.svelte';
-	import { onMount } from 'svelte';
-	import { authStore } from '$lib/stores/auth.svelte.js';
 
 	let { children } = $props();
-
-	// Initialize auth state on app startup
-	onMount(() => {
-		authStore.refreshAuth();
-	});
 </script>
 
 <div class="bg-background text-foreground min-h-screen">

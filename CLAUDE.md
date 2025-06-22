@@ -117,6 +117,13 @@ npm run test:unit   # Faster feedback during development
 npm run test:e2e    # Integration testing
 ```
 
+### Test Automation
+A git pre-commit hook is configured to automatically run all tests before allowing commits. This ensures:
+- Unit tests (23 tests): LoginForm, SignupForm, and other component tests
+- E2E tests (1 test): Homepage functionality validation
+- Commits are blocked if any tests fail
+- Code quality is maintained automatically
+
 ## UI Development Guidelines
 
 ### Component Library

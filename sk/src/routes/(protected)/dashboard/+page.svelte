@@ -5,6 +5,7 @@
 	import { pb } from '$lib/pocketbase.js';
 	import { Crown, User, Mail, Calendar, Edit3, Upload, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
+	import { getAvatarUrl } from '$lib/files.js';
 
 	// State for editing profile
 	let isEditingProfile = $state(false);
@@ -18,11 +19,6 @@
 		subscriptionStore.loadData();
 	});
 
-	// Helper to get user avatar URL
-	function getAvatarUrl(user: any): string | null {
-		if (!user?.avatar) return null;
-		return pb.files.getUrl(user, user.avatar, { thumb: '200x200' });
-	}
 
 	// Helper to format date
 	function formatDate(dateString: string): string {
@@ -288,9 +284,9 @@
 						<!-- Avatar Section -->
 						<div class="relative mb-6">
 							<div class="relative inline-block">
-								{#if getAvatarUrl(authStore.user)}
+								{#if getAvatarUrl(authStore.user, 'large')}
 									<img
-										src={getAvatarUrl(authStore.user)}
+										src={getAvatarUrl(authStore.user, 'large')}
 										alt="Profile"
 										class="w-24 h-24 rounded-full object-cover border-4 border-background shadow-lg"
 									/>

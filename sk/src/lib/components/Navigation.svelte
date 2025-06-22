@@ -3,7 +3,7 @@
 	import { Home, Info, LogIn, LogOut, User, CreditCard, Crown, Upload } from 'lucide-svelte';
 	import type { AuthModel } from 'pocketbase';
 	import { config } from '$lib/config.js';
-	import { pb } from '$lib/pocketbase.js';
+	import { getAvatarUrl } from '$lib/files.js';
 
 	let {
 		isLoggedIn = false,
@@ -75,9 +75,9 @@
 						href="/dashboard"
 						class="flex items-center space-x-2 text-sm hover:bg-accent hover:text-accent-foreground px-2 py-1 rounded-md transition-colors"
 					>
-						{#if user?.avatar}
+						{#if getAvatarUrl(user, 'small')}
 							<img
-								src={pb.files.getUrl(user, user.avatar, { thumb: '32x32' })}
+								src={getAvatarUrl(user, 'small')}
 								alt="Profile"
 								class="w-6 h-6 rounded-full object-cover border border-border"
 							/>

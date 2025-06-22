@@ -44,11 +44,36 @@ export function getFileUrl(record: FileUploadRecord, filename?: string): string 
 	return pb.files.getUrl(record, actualFilename);
 }
 
-// Get thumbnail URL for images
-export function getThumbnailUrl(record: FileUploadRecord, size: '100x100' | '300x300' = '100x100'): string {
+// Comprehensive thumbnail size types
+export type ThumbnailSize = 
+	| '32x32' | '64x64' | '100x100' | '128x128' | '200x200' | '300x300' | '400x400'
+	| '600x400' | '400x600' 
+	| '32x0' | '64x0' | '128x0' | '200x0'
+	| '0x32' | '0x64' | '0x128' | '0x200'
+	| '800x600f' | '400x300f' | '200x150f';
+
+export type AvatarSize = 'small' | 'medium' | 'large' | 'xl';
+
+// Get thumbnail URL for file uploads with comprehensive size options
+export function getThumbnailUrl(record: FileUploadRecord, size: ThumbnailSize = '100x100'): string {
 	if (!record.file) return '';
 	
 	return pb.files.getUrl(record, record.file, { thumb: size });
+}
+
+// Get avatar URL with appropriate thumbnail size
+export function getAvatarUrl(user: any, size: AvatarSize = 'medium'): string | null {
+	if (!user?.avatar) return null;
+	
+	// Define thumbnail sizes based on use case
+	const thumbSizes: Record<AvatarSize, ThumbnailSize> = {
+		small: '64x64',    // Navigation, small cards
+		medium: '128x128', // Profile cards, medium displays  
+		large: '200x200',  // Profile pages, large displays
+		xl: '200x0'        // Extra large, width-constrained
+	};
+	
+	return pb.files.getUrl(user, user.avatar, { thumb: thumbSizes[size] });
 }
 
 // Upload file using TUS protocol

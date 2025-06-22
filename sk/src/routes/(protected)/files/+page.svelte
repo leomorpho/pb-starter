@@ -4,7 +4,7 @@
 	import AvatarUpload from '$lib/components/AvatarUpload.svelte';
 	import DocumentUpload from '$lib/components/DocumentUpload.svelte';
 	import { authStore } from '$lib/stores/authClient.svelte.js';
-	import { getUserFiles, type FileUploadRecord } from '$lib/files.js';
+	import { getUserFiles, getThumbnailUrl, type FileUploadRecord } from '$lib/files.js';
 	import { config } from '$lib/config.js';
 	import { FileText, Image, User } from 'lucide-svelte';
 
@@ -44,6 +44,14 @@
 	// Handle upload error
 	function handleUploadError(error: Error) {
 		console.error('Upload error:', error);
+	}
+
+	// Check if file is an image
+	function isImageFile(file: FileUploadRecord): boolean {
+		if (!file.file) return false;
+		const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+		const fileName = file.file.toLowerCase();
+		return imageExtensions.some(ext => fileName.endsWith(ext));
 	}
 </script>
 
@@ -178,6 +186,22 @@
 					<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 						{#each userFiles as file (file.id)}
 							<div class="bg-card border rounded-lg p-4">
+								<!-- Image Thumbnail -->
+								{#if isImageFile(file)}
+									<div class="mb-3">
+										<img
+											src={getThumbnailUrl(file, '200x150f')}
+											alt={file.original_name || 'File thumbnail'}
+											class="w-full h-32 object-cover rounded-lg bg-muted"
+											loading="lazy"
+										/>
+									</div>
+								{:else}
+									<div class="mb-3 w-full h-32 bg-muted rounded-lg flex items-center justify-center">
+										<FileText class="h-8 w-8 text-muted-foreground" />
+									</div>
+								{/if}
+								
 								<div class="mb-2">
 									<h3 class="font-medium text-sm">
 										{file.original_name || 'Unnamed file'}

@@ -2,6 +2,7 @@
 	import { authStore } from '$lib/stores/authClient.svelte.js';
 	import { pb } from '$lib/pocketbase.js';
 	import { User, Camera, Upload, X } from 'lucide-svelte';
+	import { getAvatarUrl } from '$lib/files.js';
 
 	// Props
 	let {
@@ -20,7 +21,6 @@
 
 	// State
 	let showUploadDialog = $state(false);
-	let currentAvatarUrl = $state<string | null>(null);
 	let isUploading = $state(false);
 	let isDragOver = $state(false);
 	let fileInput: HTMLInputElement;
@@ -40,14 +40,13 @@
 		xl: 'h-6 w-6'
 	};
 
-	// Update avatar URL when user changes
-	$effect(() => {
-		if (authStore.user?.avatar) {
-			currentAvatarUrl = pb.files.getUrl(authStore.user, authStore.user.avatar, { thumb: '200x200' });
-		} else {
-			currentAvatarUrl = null;
-		}
-	});
+	// Map component size to avatar size
+	const avatarSizeMap = {
+		sm: 'small' as const,
+		md: 'medium' as const,
+		lg: 'medium' as const,
+		xl: 'large' as const
+	};
 
 	// Handle file upload
 	async function handleFileUpload(file: File) {
@@ -133,9 +132,9 @@
 	<div class="relative inline-block">
 		<!-- Avatar Image -->
 		<div class="relative {sizeClasses[size]} rounded-full overflow-hidden bg-muted border-2 border-background shadow-sm">
-			{#if currentAvatarUrl}
+			{#if getAvatarUrl(authStore.user, avatarSizeMap[size])}
 				<img 
-					src={currentAvatarUrl} 
+					src={getAvatarUrl(authStore.user, avatarSizeMap[size])} 
 					alt="Avatar"
 					class="w-full h-full object-cover"
 				/>

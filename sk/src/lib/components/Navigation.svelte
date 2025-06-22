@@ -1,16 +1,18 @@
 <script lang="ts">
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-	import { Home, Info, LogIn, LogOut, User } from 'lucide-svelte';
+	import { Home, Info, LogIn, LogOut, User, CreditCard, Crown } from 'lucide-svelte';
 	import type { AuthModel } from 'pocketbase';
 	import { config } from '$lib/config.js';
 
 	let {
 		isLoggedIn = false,
 		user = null,
+		isSubscribed = false,
 		onLogout
 	}: {
 		isLoggedIn?: boolean;
 		user?: AuthModel | null;
+		isSubscribed?: boolean;
 		onLogout?: () => void;
 	} = $props();
 
@@ -43,8 +45,24 @@
 				>
 					<Info class="h-4 w-4" />
 				</a>
+				<a
+					href="/pricing"
+					class="hover:bg-accent hover:text-accent-foreground inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium whitespace-nowrap transition-colors"
+					title="Pricing"
+				>
+					<CreditCard class="h-4 w-4" />
+				</a>
 
 				{#if isLoggedIn}
+					{#if isSubscribed}
+						<a
+							href="/premium"
+							class="hover:bg-accent hover:text-accent-foreground inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium whitespace-nowrap transition-colors"
+							title="Premium Features"
+						>
+							<Crown class="h-4 w-4 text-yellow-600" />
+						</a>
+					{/if}
 					<div class="flex items-center space-x-2 text-sm">
 						<User class="h-4 w-4" />
 						<span>Welcome, {user?.name || user?.email}</span>

@@ -152,3 +152,55 @@ npm run test:e2e    # Integration testing
 - Convert reactive statements `$:` to `$derived()` or `$effect()`
 - Update event handlers to use modern syntax
 - Use `{@render children()}` instead of `<slot>`
+
+## Stripe Integration
+
+This application includes full Stripe payment processing capabilities for subscription management.
+
+### Backend Stripe Configuration
+
+**Environment Variables** (stored in `pb/.env`):
+```bash
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
+STRIPE_SECRET_WHSEC=whsec_your_webhook_signing_secret_here
+STRIPE_CANCEL_URL=http://localhost:5174/pricing?canceled=true
+STRIPE_SUCCESS_URL=http://localhost:5174/billing?success=true
+HOST=http://localhost:8090
+DEVELOPMENT=true
+```
+
+**⚠️ SECURITY**: Never commit `.env` file to git. Use `.env.example` as template.
+
+### Stripe Collections
+
+The following PocketBase collections are automatically managed via webhooks:
+
+- **products**: Stripe product catalog
+- **prices**: Pricing tiers and subscription plans  
+- **customers**: Links PocketBase users to Stripe customers
+- **subscriptions**: User subscription status and billing info
+
+### API Endpoints
+
+- `POST /create-checkout-session` - Create Stripe checkout for subscriptions/payments
+- `POST /create-portal-link` - Generate billing portal access for customers
+- `POST /stripe` - Webhook endpoint for Stripe event processing
+
+### Setup Instructions
+
+1. **Create Stripe Account**: Set up test mode at https://dashboard.stripe.com
+2. **Get API Keys**: Copy secret key from https://dashboard.stripe.com/test/apikeys
+3. **Configure Webhook**: 
+   - URL: `https://your-domain.com/stripe`
+   - Events: Select all events
+   - Copy signing secret
+4. **Update Environment**: Replace placeholder values in `pb/.env`
+5. **Import Schema**: Use `pb/pb_bootstrap/pb_schema.json` to create collections
+6. **Create Products**: Add products and pricing in Stripe dashboard
+
+### Development Workflow
+
+1. Start PocketBase: `cd pb && go run main.go serve`
+2. Test webhooks: `stripe listen --forward-to=127.0.0.1:8090/stripe`
+3. Create test products in Stripe dashboard
+4. Products/prices automatically sync to PocketBase via webhooks

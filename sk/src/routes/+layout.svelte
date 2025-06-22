@@ -2,6 +2,7 @@
 	import '../app.css';
 	import Navigation from '$lib/components/Navigation.svelte';
 	import { authStore } from '$lib/stores/authClient.svelte.js';
+	import { subscriptionStore } from '$lib/stores/subscription.svelte.js';
 	import { config } from '$lib/config.js';
 
 	let { children } = $props();
@@ -25,6 +26,7 @@
 	<Navigation 
 		isLoggedIn={authStore.isLoggedIn}
 		user={authStore.user}
+		isSubscribed={subscriptionStore.isSubscribed}
 		onLogout={handleLogout}
 	/>
 

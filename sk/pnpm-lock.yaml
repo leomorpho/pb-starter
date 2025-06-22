@@ -11,6 +11,9 @@ importers:
       '@inlang/paraglide-js':
         specifier: ^2.0.0
         version: 2.1.0
+      '@stripe/stripe-js':
+        specifier: ^7.3.1
+        version: 7.3.1
       bits-ui:
         specifier: ^2.8.7
         version: 2.8.7(@internationalized/date@3.8.2)(svelte@5.34.7)
@@ -671,6 +674,10 @@ packages:
       storybook: ^9.0.12
       svelte: ^5.0.0
       vite: ^5.0.0 || ^6.0.0
+
+  '@stripe/stripe-js@7.3.1':
+    resolution: {integrity: sha512-pTzb864TQWDRQBPLgSPFRoyjSDUqpCkbEgTzpsjiTjGz1Z5SxZNXJek28w1s6Dyry4CyW4/Izj5jHE/J9hCJYQ==}
+    engines: {node: '>=12.16'}
 
   '@sveltejs/acorn-typescript@1.0.5':
     resolution: {integrity: sha512-IwQk4yfwLdibDlrXVE04jTZYlLnwsTT2PIOQQGNLWfjavGifnk1JD1LcZjZaBTRcxZu2FfPfNLOE04DSu9lqtQ==}
@@ -2733,6 +2740,8 @@ snapshots:
       vite: 6.3.5(@types/node@22.15.32)(jiti@2.4.2)(lightningcss@1.30.1)
     transitivePeerDependencies:
       - '@sveltejs/vite-plugin-svelte'
+
+  '@stripe/stripe-js@7.3.1': {}
 
   '@sveltejs/acorn-typescript@1.0.5(acorn@8.15.0)':
     dependencies:

@@ -298,17 +298,18 @@
 
 <!-- Avatar Upload Dialog -->
 {#if showAvatarUploadDialog}
-	<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onclick={(e) => e.target === e.currentTarget && (showAvatarUploadDialog = false)}>
+	<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onclick={(e) => e.target === e.currentTarget && !isUploading && (showAvatarUploadDialog = false)}>
 		<div class="bg-background rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
 			<div class="flex items-center justify-between mb-4">
 				<h3 class="text-lg font-semibold">Upload Avatar</h3>
-				<button
-					onclick={() => showAvatarUploadDialog = false}
-					class="text-muted-foreground hover:text-foreground"
-					disabled={isUploading}
-				>
-					<X class="h-5 w-5" />
-				</button>
+				{#if !isUploading}
+					<button
+						onclick={() => showAvatarUploadDialog = false}
+						class="text-muted-foreground hover:text-foreground"
+					>
+						<X class="h-5 w-5" />
+					</button>
+				{/if}
 			</div>
 			
 			<!-- Upload Area -->
@@ -331,6 +332,7 @@
 						<div>
 							<p class="text-sm font-medium mb-1">Drop your image here, or click to browse</p>
 							<p class="text-xs text-muted-foreground">JPEG, PNG, WebP or GIF up to 5MB</p>
+							<p class="text-xs text-muted-foreground mt-1">✨ Upload starts automatically when file is selected</p>
 						</div>
 						<button
 							onclick={() => fileInput.click()}
@@ -352,15 +354,6 @@
 				disabled={isUploading}
 			/>
 
-			<div class="flex justify-end space-x-2 mt-4">
-				<button
-					onclick={() => showAvatarUploadDialog = false}
-					class="px-4 py-2 text-sm border border-muted-foreground/20 rounded-md hover:bg-muted transition-colors"
-					disabled={isUploading}
-				>
-					Cancel
-				</button>
-			</div>
 		</div>
 	</div>
 {/if}

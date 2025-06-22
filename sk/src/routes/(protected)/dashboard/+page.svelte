@@ -3,13 +3,15 @@
 	import { subscriptionStore } from '$lib/stores/subscription.svelte.js';
 	import { config } from '$lib/config.js';
 	import { pb } from '$lib/pocketbase.js';
-	import AvatarUpload from '$lib/components/AvatarUpload.svelte';
-	import { Crown, User, Mail, Calendar, Edit3, Upload } from 'lucide-svelte';
+	import { Crown, User, Mail, Calendar, Edit3, Upload, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 
 	// State for editing profile
 	let isEditingProfile = $state(false);
-	let isEditingAvatar = $state(false);
+	let showAvatarUploadDialog = $state(false);
+	let isUploading = $state(false);
+	let isDragOver = $state(false);
+	let fileInput: HTMLInputElement;
 
 	// Load subscription data on mount
 	onMount(() => {
@@ -31,18 +33,74 @@
 		});
 	}
 
-	// Handle avatar upload completion
-	function handleAvatarUpload() {
-		// Refresh user data after avatar upload
-		authStore.syncState();
-		isEditingAvatar = false;
+	// Handle file upload
+	async function handleFileUpload(file: File) {
+		if (!authStore.user) return;
+
+		// Validate file
+		const maxSize = 5 * 1024 * 1024; // 5MB
+		const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+		
+		if (file.size > maxSize) {
+			console.error('File size must be less than 5MB');
+			return;
+		}
+
+		if (!allowedTypes.includes(file.type)) {
+			console.error('File must be an image (JPEG, PNG, WebP, or GIF)');
+			return;
+		}
+
+		try {
+			isUploading = true;
+
+			// Create FormData and upload directly to PocketBase users collection
+			const formData = new FormData();
+			formData.append('avatar', file);
+
+			// Update user record with new avatar
+			await pb.collection('users').update(authStore.user.id, formData);
+			
+			// Close dialog and refresh
+			showAvatarUploadDialog = false;
+			authStore.syncState();
+		} catch (error) {
+			console.error('Failed to upload avatar:', error);
+		} finally {
+			isUploading = false;
+		}
 	}
 
-	// Handle avatar upload error
-	function handleAvatarError(error: Error) {
-		console.error('Avatar upload error:', error);
-		// You might want to show a toast notification here
+	// Handle file input change
+	function handleFileChange(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (file) {
+			handleFileUpload(file);
+		}
 	}
+
+	// Handle drag and drop
+	function handleDrop(event: DragEvent) {
+		event.preventDefault();
+		isDragOver = false;
+		
+		const files = event.dataTransfer?.files;
+		if (files && files.length > 0) {
+			handleFileUpload(files[0]);
+		}
+	}
+
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault();
+		isDragOver = true;
+	}
+
+	function handleDragLeave(event: DragEvent) {
+		event.preventDefault();
+		isDragOver = false;
+	}
+
 </script>
 
 <svelte:head>
@@ -80,31 +138,15 @@
 								
 								<!-- Edit Avatar Button -->
 								<button
-									onclick={() => isEditingAvatar = !isEditingAvatar}
+									onclick={() => showAvatarUploadDialog = true}
 									class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors flex items-center justify-center"
-									title="Edit avatar"
+									title="Upload avatar"
 								>
 									<Edit3 class="w-4 h-4" />
 								</button>
 							</div>
 						</div>
 
-						<!-- Avatar Upload Component (when editing) -->
-						{#if isEditingAvatar}
-							<div class="mb-6 p-4 bg-muted/50 rounded-lg border border-dashed border-border">
-								<AvatarUpload
-									size="sm"
-									onUploadComplete={handleAvatarUpload}
-									onUploadError={handleAvatarError}
-								/>
-								<button
-									onclick={() => isEditingAvatar = false}
-									class="mt-3 text-sm text-muted-foreground hover:text-foreground"
-								>
-									Cancel
-								</button>
-							</div>
-						{/if}
 
 						<!-- User Name & Email -->
 						<div class="space-y-2">
@@ -253,3 +295,72 @@
 		</div>
 	</div>
 </div>
+
+<!-- Avatar Upload Dialog -->
+{#if showAvatarUploadDialog}
+	<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onclick={(e) => e.target === e.currentTarget && (showAvatarUploadDialog = false)}>
+		<div class="bg-background rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+			<div class="flex items-center justify-between mb-4">
+				<h3 class="text-lg font-semibold">Upload Avatar</h3>
+				<button
+					onclick={() => showAvatarUploadDialog = false}
+					class="text-muted-foreground hover:text-foreground"
+					disabled={isUploading}
+				>
+					<X class="h-5 w-5" />
+				</button>
+			</div>
+			
+			<!-- Upload Area -->
+			<div 
+				class="border-2 border-dashed rounded-lg p-8 text-center transition-colors {isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/20'}"
+				ondrop={handleDrop}
+				ondragover={handleDragOver}
+				ondragleave={handleDragLeave}
+			>
+				{#if isUploading}
+					<div class="space-y-4">
+						<div class="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto"></div>
+						<p class="text-sm text-muted-foreground">Uploading avatar...</p>
+					</div>
+				{:else}
+					<div class="space-y-4">
+						<div class="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto">
+							<Upload class="h-6 w-6 text-muted-foreground" />
+						</div>
+						<div>
+							<p class="text-sm font-medium mb-1">Drop your image here, or click to browse</p>
+							<p class="text-xs text-muted-foreground">JPEG, PNG, WebP or GIF up to 5MB</p>
+						</div>
+						<button
+							onclick={() => fileInput.click()}
+							class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm"
+						>
+							Choose File
+						</button>
+					</div>
+				{/if}
+			</div>
+
+			<!-- Hidden file input -->
+			<input
+				bind:this={fileInput}
+				type="file"
+				accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+				onchange={handleFileChange}
+				class="hidden"
+				disabled={isUploading}
+			/>
+
+			<div class="flex justify-end space-x-2 mt-4">
+				<button
+					onclick={() => showAvatarUploadDialog = false}
+					class="px-4 py-2 text-sm border border-muted-foreground/20 rounded-md hover:bg-muted transition-colors"
+					disabled={isUploading}
+				>
+					Cancel
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

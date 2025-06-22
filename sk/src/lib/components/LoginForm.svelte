@@ -4,8 +4,11 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { cn, type WithElementRef } from '$lib/utils.js';
-	import { authStore } from '$lib/stores/authClient.svelte.js';
+	import { authStore } from '$lib/stores/authClient.svelte';
 	import { goto } from '$app/navigation';
+	import { webauthnLogin } from '$lib/pocketbase';
+	import { Key } from 'lucide-svelte';
+	import PasskeyRegistration from './PasskeyRegistration.svelte';
 
 	let {
 		ref = $bindable(null),
@@ -17,7 +20,17 @@
 	let email = $state('');
 	let password = $state('');
 	let isLoading = $state(false);
+	let isPasskeyLoading = $state(false);
 	let error = $state<string | null>(null);
+	
+	// Check WebAuthn support
+	let webAuthnSupported = $state(false);
+	
+	// Initialize WebAuthn support check on mount
+	$effect(() => {
+		webAuthnSupported = typeof navigator !== 'undefined' && 
+		   !!(navigator.credentials?.create && navigator.credentials?.get);
+	});
 
 	// Generate unique ID for form fields
 	let formId = $state(Math.random().toString(36).substr(2, 9));
@@ -42,6 +55,27 @@
 		}
 
 		isLoading = false;
+	}
+
+	async function handlePasskeyLogin() {
+		if (!email) {
+			error = 'Please enter your email first';
+			return;
+		}
+
+		isPasskeyLoading = true;
+		error = null;
+
+		try {
+			await webauthnLogin(email);
+			// webauthnLogin handles saving to authStore internally
+			goto('/dashboard');
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Passkey authentication failed';
+			console.error('Passkey login error:', err);
+		}
+
+		isPasskeyLoading = false;
 	}
 </script>
 
@@ -104,7 +138,7 @@
 						required
 					/>
 				</div>
-				<Button type="submit" class="w-full" disabled={isLoading}>
+				<Button type="submit" class="w-full" disabled={isLoading || isPasskeyLoading}>
 					{isLoading ? 'Signing in...' : 'Login'}
 				</Button>
 			</div>
@@ -113,6 +147,32 @@
 			>
 				<span class="bg-background text-muted-foreground relative z-10 px-2"> Or </span>
 			</div>
+			<Button 
+				variant="outline" 
+				type="button" 
+				class="w-full"
+				onclick={handlePasskeyLogin}
+				disabled={isLoading || isPasskeyLoading || !email || !webAuthnSupported}
+			>
+				<Key class="mr-2 h-4 w-4" />
+				{isPasskeyLoading ? 'Authenticating...' : !webAuthnSupported ? 'WebAuthn Not Supported' : !email ? 'Enter email to use passkey' : 'Sign in with Passkey'}
+			</Button>
+
+			{#if email && webAuthnSupported}
+				<div class="mt-4">
+					<PasskeyRegistration 
+						{email}
+						onSuccess={() => {
+							// Optionally refresh the page or show success message
+							console.log('Passkey registered successfully');
+						}}
+						onError={(error) => {
+							console.error('Passkey registration failed:', error);
+						}}
+					/>
+				</div>
+			{/if}
+			
 			<div class="grid gap-4 sm:grid-cols-2">
 				<Button variant="outline" type="button" class="w-full">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

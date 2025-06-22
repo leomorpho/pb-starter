@@ -46,6 +46,24 @@ cd pb
 modd               # Watch Go files and auto-restart server
 ```
 
+### PocketBase Migrations
+**IMPORTANT**: Always use PocketBase's built-in migration creation command, then populate the generated file:
+
+```bash
+cd pb
+# Create migration file using PocketBase command
+./pocketbase migrate create migration_name
+
+# Then edit the generated file with your migration logic
+# Apply migrations
+./pocketbase migrate up
+
+# Sync migration history if needed
+./pocketbase migrate history-sync
+```
+
+**DO NOT** manually create migration files with timestamps - this causes migration tracking issues. Let PocketBase generate the file structure and timestamp, then add your collection/field definitions using the proper PocketBase migration syntax (see existing migrations for examples).
+
 ## Architecture Overview
 
 ### Backend (PocketBase)

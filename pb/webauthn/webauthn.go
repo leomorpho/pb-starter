@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
@@ -57,9 +58,33 @@ var (
 )
 
 func findAuthRecordByUsernameOrEmail(app *pocketbase.PocketBase, usernameOrEmail string) (*core.Record, error) {
-	user, err := app.FindFirstRecordByFilter("users", "username = {:qs} || email = {:qs}", map[string]any{
-		"qs": usernameOrEmail,
+	spew.Dump("++++++++> usernameOrEmail", usernameOrEmail)
+	
+	// First, let's check if the collection exists
+	collection, err := app.FindCollectionByNameOrId("users")
+	if err != nil {
+		spew.Dump("Collection 'users' not found:", err)
+		return nil, err
+	}
+	spew.Dump("Collection found:", collection.Name)
+	
+	// Try to find by email only first
+	user, err := app.FindFirstRecordByFilter("users", "email = {:email}", map[string]any{
+		"email": usernameOrEmail,
 	})
+	
+	if err != nil {
+		spew.Dump("Error finding user by email:", err)
+		// Try by username
+		user, err = app.FindFirstRecordByFilter("users", "username = {:username}", map[string]any{
+			"username": usernameOrEmail,
+		})
+		if err != nil {
+			spew.Dump("Error finding user by username:", err)
+		}
+	}
+	
+	spew.Dump("=====> user", user)
 	return user, err
 }
 
@@ -103,7 +128,7 @@ func Register(app *pocketbase.PocketBase) {
 	}
 	domain := origin[strings.Index(origin, "//")+2:]
 
-	// TODO: Find a better way to do this + handle multiple origins
+	// TODO: Find a better way to do this + handle mutliple origins
 	wconfig := &webauthn.Config{
 		RPDisplayName: app.Settings().Meta.AppName, // Display Name for your site
 		RPID:          domain,                      // Generally the FQDN for your site
@@ -117,7 +142,12 @@ func Register(app *pocketbase.PocketBase) {
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		// Start of the registration process
 		se.Router.GET("/api/webauthn/registration-options", func(c *core.RequestEvent) error {
-			user, err := findAuthRecordByUsernameOrEmail(app, c.Request.URL.Query()["usernameOrEmail"][0])
+			usernameOrEmail := c.Request.URL.Query().Get("usernameOrEmail")
+			if usernameOrEmail == "" {
+				return c.JSON(400, map[string]string{"error": "usernameOrEmail parameter is required"})
+			}
+
+			user, err := findAuthRecordByUsernameOrEmail(app, usernameOrEmail)
 			if err != nil {
 				return c.JSON(400, responses["failed"])
 			}
@@ -155,7 +185,12 @@ func Register(app *pocketbase.PocketBase) {
 
 		// Start of the login process
 		se.Router.GET("/api/webauthn/login-options", func(c *core.RequestEvent) error {
-			user, err := findAuthRecordByUsernameOrEmail(app, c.Request.URL.Query()["usernameOrEmail"][0])
+			usernameOrEmail := c.Request.URL.Query().Get("usernameOrEmail")
+			if usernameOrEmail == "" {
+				return c.JSON(400, map[string]string{"error": "usernameOrEmail parameter is required"})
+			}
+
+			user, err := findAuthRecordByUsernameOrEmail(app, usernameOrEmail)
 			if err != nil {
 				return c.JSON(400, responses["failed"])
 			}

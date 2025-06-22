@@ -22,7 +22,7 @@ func init() {
 			&core.RelationField{
 				Name:          "user",
 				Required:      true,
-				CollectionId:  "_pb_users_auth_",
+				CollectionId:  "users",
 				MaxSelect:     1,
 				CascadeDelete: true,
 			},

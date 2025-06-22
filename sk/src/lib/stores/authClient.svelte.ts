@@ -139,6 +139,17 @@ class ClientAuthStore {
 		}
 	}
 
+	// Set auth data directly (for WebAuthn and other external auth)
+	setAuthData(token: string, record: AuthModel) {
+		if (browser) {
+			// Set the auth token and model in PocketBase
+			pb.authStore.save(token, record);
+			
+			// Manual sync to ensure reactive state updates immediately
+			this.syncState();
+		}
+	}
+
 	// Manual method to sync state (for edge cases)
 	syncState() {
 		if (browser) {

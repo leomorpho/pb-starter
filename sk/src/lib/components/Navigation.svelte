@@ -3,6 +3,7 @@
 	import { Home, Info, LogIn, LogOut, User, CreditCard, Crown, Upload } from 'lucide-svelte';
 	import type { AuthModel } from 'pocketbase';
 	import { config } from '$lib/config.js';
+	import { pb } from '$lib/pocketbase.js';
 
 	let {
 		isLoggedIn = false,
@@ -70,10 +71,23 @@
 							<Crown class="h-4 w-4 text-yellow-600" />
 						</a>
 					{/if}
-					<div class="flex items-center space-x-2 text-sm">
-						<User class="h-4 w-4" />
-						<span>Welcome, {user?.name || user?.email}</span>
-					</div>
+					<a
+						href="/dashboard"
+						class="flex items-center space-x-2 text-sm hover:bg-accent hover:text-accent-foreground px-2 py-1 rounded-md transition-colors"
+					>
+						{#if user?.avatar}
+							<img
+								src={pb.files.getUrl(user, user.avatar, { thumb: '32x32' })}
+								alt="Profile"
+								class="w-6 h-6 rounded-full object-cover border border-border"
+							/>
+						{:else}
+							<div class="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center">
+								<User class="h-3 w-3 text-muted-foreground" />
+							</div>
+						{/if}
+						<span class="hidden sm:inline">{user?.name || user?.email}</span>
+					</a>
 					<button
 						onclick={handleLogout}
 						class="hover:bg-accent hover:text-accent-foreground inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium whitespace-nowrap transition-colors"

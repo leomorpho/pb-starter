@@ -61,13 +61,13 @@
 		}
 	}
 
-	$: currentPrice = subscriptionStore.userSubscription 
+	let currentPrice = $derived(subscriptionStore.userSubscription 
 		? subscriptionStore.getPrice(subscriptionStore.userSubscription.price_id)
-		: null;
+		: null);
 
-	$: currentProduct = currentPrice 
+	let currentProduct = $derived(currentPrice 
 		? subscriptionStore.getProduct(currentPrice.product_id)
-		: null;
+		: null);
 </script>
 
 <svelte:head>

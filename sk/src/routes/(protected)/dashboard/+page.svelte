@@ -354,20 +354,7 @@
 				<!-- Quick Actions -->
 				<div class="bg-card rounded-xl border border-border p-6 shadow-sm">
 					<h3 class="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
-					<div class="grid gap-4 sm:grid-cols-2">
-						<a
-							href="/files"
-							class="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-950/70 transition-colors group"
-						>
-							<div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-								<Upload class="w-5 h-5 text-white" />
-							</div>
-							<div>
-								<h4 class="font-medium text-blue-900 dark:text-blue-100">Upload Files</h4>
-								<p class="text-sm text-blue-700 dark:text-blue-300">Manage your uploads</p>
-							</div>
-						</a>
-
+					<div class="grid gap-4 sm:grid-cols-1">
 						{#if subscriptionStore.isSubscribed}
 							<a
 								href="/billing"

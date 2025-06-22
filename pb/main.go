@@ -13,6 +13,7 @@ import (
 	"github.com/stripe/stripe-go/v79"
 
 	stripehandlers "pocketbase/internal/stripe"
+	"pocketbase/webauthn"
 	_ "pocketbase/migrations"
 )
 
@@ -34,6 +35,9 @@ func main() {
 
 	// Configure Stripe
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+
+	// Register WebAuthn
+	webauthn.Register(app)
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		// Serve static files from the provided public dir (if exists)

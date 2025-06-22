@@ -133,10 +133,9 @@ class ClientAuthStore {
 		// Manual sync in case onChange doesn't fire immediately
 		this.syncState();
 
-		// Force page reload to ensure clean state
-		if (browser) {
-			window.location.href = '/';
-		}
+		// Let route protection logic handle redirects appropriately
+		// No forced redirect needed - protected routes will redirect to /login
+		// and public routes will stay where they are
 	}
 
 	// Set auth data directly (for WebAuthn and other external auth)

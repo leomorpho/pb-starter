@@ -58,13 +58,14 @@ class SubscriptionStore {
 	// Initialize the store with effect tracking - call this from components
 	initialize() {
 		if (browser) {
-			// Load data when auth state changes
+			// Load products and prices immediately (public data)
+			this.loadData();
+			
+			// Watch auth state changes to load/clear user-specific data
 			$effect(() => {
 				if (authStore.isLoggedIn) {
-					this.loadData();
+					this.loadUserSubscription();
 				} else {
-					this.#products = [];
-					this.#prices = [];
 					this.#userSubscription = null;
 				}
 			});
@@ -97,12 +98,12 @@ class SubscriptionStore {
 	}
 
 	async loadData() {
-		if (!browser || !authStore.isLoggedIn) return;
+		if (!browser) return;
 
 		this.#isLoading = true;
 
 		try {
-			// Load products and prices in parallel
+			// Load products and prices in parallel (public data - no auth required)
 			const [productsResult, pricesResult] = await Promise.all([
 				pb.collection('products').getFullList({
 					filter: 'active = true',
@@ -117,8 +118,12 @@ class SubscriptionStore {
 			this.#products = productsResult as Product[];
 			this.#prices = pricesResult as Price[];
 
-			// Load user subscription
-			await this.loadUserSubscription();
+			// Load user subscription only if logged in
+			if (authStore.isLoggedIn) {
+				await this.loadUserSubscription();
+			} else {
+				this.#userSubscription = null;
+			}
 		} catch (error) {
 			console.warn('Subscription collections not available yet. Please import the schema from pb/pb_bootstrap/pb_schema.json');
 			// Set empty state

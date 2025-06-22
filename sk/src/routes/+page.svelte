@@ -19,48 +19,47 @@
 	const features = [
 		{
 			icon: Rocket,
-			title: 'Lightning Fast',
-			subtitle: 'Built for Speed',
-			description: 'Optimized performance with modern architecture and static site generation for blazing fast load times.',
-			benefits: ['Sub-second page loads', 'Global CDN distribution', 'Optimized images & assets'],
+			title: 'Production Ready',
+			subtitle: 'Zero Configuration',
+			description: 'Complete full-stack starter with SvelteKit + PocketBase. Deploy in minutes, not weeks.',
+			benefits: ['Static site generation', 'Go-powered backend', 'Database included'],
 			gradient: 'from-blue-500 to-purple-600'
 		},
 		{
 			icon: Shield,
-			title: 'Enterprise Security',
-			subtitle: 'Bank-Grade Protection',
-			description: 'Advanced security features with encrypted data, secure authentication, and compliance standards.',
-			benefits: ['End-to-end encryption', 'Multi-factor authentication', 'GDPR compliant'],
+			title: 'Modern Authentication',
+			subtitle: 'WebAuthn + Passkeys',
+			description: 'Passwordless authentication with WebAuthn passkeys, progressive login flow, and enterprise security.',
+			benefits: ['Passwordless login', 'Progressive UX', 'Multi-factor auth'],
 			gradient: 'from-green-500 to-teal-600'
 		},
 		{
 			icon: Users,
-			title: 'Team Collaboration',
-			subtitle: 'Work Together',
-			description: 'Powerful collaboration tools that help teams stay synchronized and productive.',
-			benefits: ['Real-time updates', 'Team workspaces', 'Activity tracking'],
+			title: 'Payment Integration',
+			subtitle: 'Stripe Built-in',
+			description: 'Complete subscription management with Stripe integration, webhooks, and billing portal.',
+			benefits: ['Subscription billing', 'Webhook automation', 'Customer portal'],
 			gradient: 'from-pink-500 to-rose-600'
 		},
 		{
 			icon: Zap,
-			title: 'Smart Automation',
-			subtitle: 'AI-Powered',
-			description: 'Intelligent automation that learns from your patterns and optimizes workflows automatically.',
-			benefits: ['Smart suggestions', 'Automated workflows', 'Predictive analytics'],
+			title: 'Developer Experience',
+			subtitle: 'Everything Included',
+			description: 'TypeScript, Tailwind, shadcn-svelte, testing, i18n, file uploads - all configured and ready.',
+			benefits: ['Pre-commit hooks', 'Vitest + Playwright', 'TUS file uploads'],
 			gradient: 'from-yellow-500 to-orange-600'
 		}
 	];
 
 	const stats = [
-		{ number: '99.9%', label: 'Uptime Guarantee' },
+		{ number: '24+', label: 'Features Included' },
 		{ number: '10x', label: 'Faster Development' },
-		{ number: '500K+', label: 'Active Users' },
-		{ number: '24/7', label: 'Support Available' }
+		{ number: '100%', label: 'Open Source' },
+		{ number: '0 min', label: 'Setup Time' }
 	];
 
 	onMount(() => {
-		// Temporarily disable animations to debug
-		console.log('Component mounted, animations disabled for debugging');
+		// Enable all animations with GSAP
 		
 		// Smooth blob animations - faster pace
 		gsap.to('.blob-1', {
@@ -94,14 +93,76 @@
 			ease: 'sine.inOut',
 			delay: 1
 		});
+
+		// Hero content animations
+		gsap.from('.hero-badge', { opacity: 0, y: 30, duration: 1, ease: 'power2.out' });
+		gsap.from('.hero-title', { opacity: 0, y: 50, duration: 1.2, delay: 0.2, ease: 'power2.out' });
+		gsap.from('.hero-subtitle', { opacity: 0, y: 30, duration: 1, delay: 0.4, ease: 'power2.out' });
+		gsap.from('.hero-desc', { opacity: 0, y: 20, duration: 1, delay: 0.6, ease: 'power2.out' });
+		gsap.from('.hero-buttons', { opacity: 0, y: 20, duration: 1, delay: 0.8, ease: 'power2.out' });
+		gsap.from('.hero-stats', { opacity: 0, y: 20, duration: 1, delay: 1, ease: 'power2.out' });
+
+		// Feature cards gentle floating animation only
+		gsap.to('.feature-card', {
+			y: -8,
+			duration: 3,
+			ease: 'sine.inOut',
+			repeat: -1,
+			yoyo: true,
+			stagger: 0.3
+		});
+
+		// Tech stack cards gentle floating
+		gsap.to('.tech-card', {
+			y: -6,
+			duration: 2.5,
+			ease: 'sine.inOut',
+			repeat: -1,
+			yoyo: true,
+			stagger: 0.2
+		});
+
+		// Section headings animation
+		gsap.from('.section-heading', {
+			opacity: 0,
+			y: 30,
+			duration: 1,
+			ease: 'power2.out',
+			scrollTrigger: {
+				trigger: '.section-heading',
+				start: 'top 80%'
+			}
+		});
+
+		// CTA section animation
+		gsap.from('.cta-content', {
+			opacity: 0,
+			y: 40,
+			duration: 1.2,
+			ease: 'power2.out',
+			scrollTrigger: {
+				trigger: '.cta-content',
+				start: 'top 80%'
+			}
+		});
+
+		// Stats floating animation
+		gsap.to('.stat-item', {
+			y: -5,
+			duration: 1.5,
+			ease: 'sine.inOut',
+			repeat: -1,
+			yoyo: true,
+			stagger: 0.2
+		});
 	});
 </script>
 
 <svelte:head>
-	<title>{config.app.name} • Modern SaaS Platform</title>
+	<title>{config.app.name} • Powerful SaaS Starter Kit</title>
 	<meta
 		name="description"
-		content="Transform your workflow with our modern, secure, and lightning-fast platform. Built for teams that demand excellence."
+		content="Launch your SaaS in days, not months. Complete full-stack starter with SvelteKit, PocketBase, WebAuthn, Stripe, TUS uploads, and more."
 	/>
 </svelte:head>
 
@@ -132,21 +193,21 @@
 
 			<div class="space-y-6">
 				<h1 class="hero-title text-6xl lg:text-8xl xl:text-9xl font-black leading-none">
-					<span class="block text-foreground">MODERN</span>
+					<span class="block text-foreground">POWERFUL</span>
 					<span class="block bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-						SAAS
+						STARTER
 					</span>
-					<span class="block text-foreground">PLATFORM</span>
+					<span class="block text-foreground">KIT</span>
 				</h1>
 
 				<p class="hero-subtitle text-xl lg:text-2xl text-muted-foreground font-light max-w-2xl">
-					Transform your workflow with our secure, lightning-fast platform. Built for teams that demand excellence and innovation.
+					Launch your SaaS in days, not months. Complete full-stack starter with authentication, payments, file uploads, and more.
 				</p>
 			</div>
 
 			<div class="hero-desc">
 				<p class="text-muted-foreground/80 max-w-xl text-sm leading-relaxed">
-					Join thousands of teams using our platform to streamline operations, boost productivity, and scale their business with confidence.
+					SvelteKit + PocketBase + TypeScript + Tailwind + shadcn-svelte + WebAuthn + Stripe + TUS uploads + Testing + i18n - everything you need to ship fast.
 				</p>
 			</div>
 
@@ -157,18 +218,18 @@
 					</Button>
 				{:else}
 					<Button href="/signup" size="lg" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-						Get Started Free
+						Start Building Now
 					</Button>
 				{/if}
-				<Button href="/pricing" variant="outline" size="lg">
-					View Pricing
+				<Button href="/about" variant="outline" size="lg">
+					See All Features
 				</Button>
 			</div>
 
 			<!-- Stats -->
 			<div class="hero-stats grid grid-cols-2 lg:grid-cols-4 gap-6 pt-8 border-t border-border/50">
 				{#each stats as stat}
-					<div class="text-center lg:text-left">
+					<div class="stat-item text-center lg:text-left">
 						<div class="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
 							{stat.number}
 						</div>
@@ -209,14 +270,14 @@
 <section class="py-32 bg-background">
 	<div class="max-w-7xl mx-auto px-6">
 		<div class="text-center mb-20">
-			<div class="fade-up space-y-4">
-				<Badge variant="secondary">Core Features</Badge>
+			<div class="section-heading space-y-4">
+				<Badge variant="secondary">Starter Kit Features</Badge>
 				<h2 class="text-4xl lg:text-6xl font-black text-foreground">
 					EVERYTHING YOU<br />
-					<span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">NEED TO SUCCEED</span>
+					<span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">NEED TO SHIP</span>
 				</h2>
 				<p class="text-muted-foreground text-lg max-w-2xl mx-auto">
-					Powerful features designed to streamline your workflow and accelerate growth
+					Production-ready features that eliminate months of development and configuration
 				</p>
 			</div>
 		</div>
@@ -237,7 +298,7 @@
 							<!-- Content -->
 							<div class="space-y-4">
 								<div>
-									<h3 class="text-2xl font-bold text-foreground group-hover:bg-gradient-to-r group-hover:{feature.gradient} group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+									<h3 class="text-2xl font-bold text-foreground">
 										{feature.title}
 									</h3>
 									<p class="text-sm font-medium bg-gradient-to-r {feature.gradient} bg-clip-text text-transparent">
@@ -269,40 +330,50 @@
 <!-- Social Proof Section -->
 <section class="py-32 bg-muted/20">
 	<div class="max-w-7xl mx-auto px-6">
-		<div class="fade-up text-center mb-16">
-			<Badge variant="secondary">Trusted by Teams</Badge>
-			<h2 class="text-4xl lg:text-5xl font-black text-foreground mt-8 mb-6">
-				JOIN THOUSANDS OF<br />
-				<span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">SATISFIED USERS</span>
-			</h2>
+		<div class="text-center mb-16">
+			<div class="section-heading">
+				<Badge variant="secondary">Tech Stack</Badge>
+				<h2 class="text-4xl lg:text-5xl font-black text-foreground mt-8 mb-6">
+					BUILT WITH<br />
+					<span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">MODERN STACK</span>
+				</h2>
+			</div>
 		</div>
 
 		<div class="grid md:grid-cols-3 gap-8">
-			{#each Array(3) as _, i}
-				<Card class="fade-up group hover:shadow-xl transition-all duration-300" style="animation-delay: {i * 0.2}s">
-					<CardContent class="p-6">
-						<div class="space-y-4">
-							<div class="flex space-x-1">
-								{#each Array(5) as _}
-									<Star class="h-4 w-4 fill-yellow-400 text-yellow-400" />
-								{/each}
-							</div>
-							<p class="text-muted-foreground italic">
-								"This platform has completely transformed how our team collaborates. The speed and reliability are unmatched."
-							</p>
-							<div class="flex items-center space-x-3">
-								<div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-									<span class="text-white font-bold text-sm">{String.fromCharCode(65 + i)}</span>
-								</div>
-								<div>
-									<div class="font-semibold">Team Lead</div>
-									<div class="text-sm text-muted-foreground">Growing Startup</div>
-								</div>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-			{/each}
+			<Card class="tech-card group hover:shadow-xl transition-all duration-300">
+				<CardContent class="p-6">
+					<div class="space-y-4">
+						<div class="text-4xl">⚡</div>
+						<h3 class="text-xl font-bold">Frontend</h3>
+						<p class="text-muted-foreground text-sm">
+							SvelteKit 5 with runes, TypeScript, Tailwind CSS, shadcn-svelte components, Paraglide i18n
+						</p>
+					</div>
+				</CardContent>
+			</Card>
+			<Card class="tech-card group hover:shadow-xl transition-all duration-300">
+				<CardContent class="p-6">
+					<div class="space-y-4">
+						<div class="text-4xl">🚀</div>
+						<h3 class="text-xl font-bold">Backend</h3>
+						<p class="text-muted-foreground text-sm">
+							PocketBase with Go, SQLite database, real-time subscriptions, WebAuthn passkeys, Stripe integration
+						</p>
+					</div>
+				</CardContent>
+			</Card>
+			<Card class="tech-card group hover:shadow-xl transition-all duration-300">
+				<CardContent class="p-6">
+					<div class="space-y-4">
+						<div class="text-4xl">🧪</div>
+						<h3 class="text-xl font-bold">Developer Tools</h3>
+						<p class="text-muted-foreground text-sm">
+							Vitest + Playwright testing, Storybook, ESLint, Prettier, pre-commit hooks, TUS file uploads
+						</p>
+					</div>
+				</CardContent>
+			</Card>
 		</div>
 	</div>
 </section>
@@ -310,18 +381,18 @@
 <!-- CTA Section -->
 <section class="py-32 bg-background">
 	<div class="max-w-5xl mx-auto px-6 text-center">
-		<div class="fade-up space-y-12">
+		<div class="cta-content space-y-12">
 			<Badge variant="secondary">Ready to Start?</Badge>
 
 			<h2 class="text-5xl lg:text-7xl font-black text-foreground">
-				START YOUR<br />
+				CLONE AND<br />
 				<span class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-					JOURNEY TODAY
+					START BUILDING
 				</span>
 			</h2>
 
 			<p class="text-muted-foreground text-lg max-w-2xl mx-auto">
-				Join thousands of teams already using our platform to streamline their workflow and accelerate growth.
+				Skip months of setup. Get a production-ready SaaS foundation with authentication, payments, file uploads, and more.
 			</p>
 
 			<div class="flex flex-col sm:flex-row gap-6 justify-center">
@@ -354,7 +425,7 @@
 			<!-- Final Stats -->
 			<div class="grid grid-cols-2 md:grid-cols-4 gap-8 pt-16 border-t border-border/50">
 				{#each stats as stat}
-					<div>
+					<div class="stat-item">
 						<div class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
 							{stat.number}
 						</div>
@@ -367,16 +438,37 @@
 </section>
 
 <style>
-	/* Ensure all content is visible */
-	:global(.fade-up),
-	:global(.feature-card),
+	/* Allow GSAP animations to work properly */
+	:global(.feature-card) {
+		will-change: transform;
+		/* Ensure cards are visible by default */
+		opacity: 1;
+	}
+	
+	:global(.tech-card) {
+		will-change: transform;
+		/* Ensure cards are visible by default */
+		opacity: 1;
+	}
+	
+	:global(.stat-item) {
+		will-change: transform;
+	}
+	
+	:global(.section-heading) {
+		will-change: opacity, transform;
+	}
+	
+	:global(.cta-content) {
+		will-change: opacity, transform;
+	}
+
 	:global(.hero-badge),
 	:global(.hero-title),
 	:global(.hero-subtitle),
 	:global(.hero-desc),
 	:global(.hero-buttons),
 	:global(.hero-stats) {
-		opacity: 1 !important;
-		transform: none !important;
+		will-change: opacity, transform;
 	}
 </style>

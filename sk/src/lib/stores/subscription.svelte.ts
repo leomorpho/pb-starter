@@ -52,6 +52,11 @@ class SubscriptionStore {
 	#isLoading = $state(false);
 
 	constructor() {
+		// Initialize will be called from components
+	}
+
+	// Initialize the store with effect tracking - call this from components
+	initialize() {
 		if (browser) {
 			// Load data when auth state changes
 			$effect(() => {
@@ -102,11 +107,11 @@ class SubscriptionStore {
 				pb.collection('products').getFullList({
 					filter: 'active = true',
 					sort: 'product_order,name'
-				}),
+				}).catch(() => []), // Return empty array if collection doesn't exist
 				pb.collection('prices').getFullList({
 					filter: 'active = true',
 					sort: 'unit_amount'
-				})
+				}).catch(() => []) // Return empty array if collection doesn't exist
 			]);
 
 			this.#products = productsResult as Product[];
@@ -115,7 +120,11 @@ class SubscriptionStore {
 			// Load user subscription
 			await this.loadUserSubscription();
 		} catch (error) {
-			console.error('Error loading subscription data:', error);
+			console.warn('Subscription collections not available yet. Please import the schema from pb/pb_bootstrap/pb_schema.json');
+			// Set empty state
+			this.#products = [];
+			this.#prices = [];
+			this.#userSubscription = null;
 		} finally {
 			this.#isLoading = false;
 		}
@@ -130,9 +139,12 @@ class SubscriptionStore {
 				{ sort: '-created' }
 			);
 			this.#userSubscription = subscription as Subscription;
-		} catch (error) {
-			// No active subscription found
+		} catch (error: any) {
+			// No active subscription found or collection doesn't exist
 			this.#userSubscription = null;
+			if (error?.status === 404 && error?.message?.includes('Missing collection')) {
+				console.warn('Subscriptions collection not available yet. Please import the schema from pb/pb_bootstrap/pb_schema.json');
+			}
 		}
 	}
 

@@ -3,14 +3,17 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/stripe/stripe-go/v79"
 
 	stripehandlers "pocketbase/internal/stripe"
+	_ "pocketbase/migrations"
 )
 
 func main() {
@@ -20,6 +23,14 @@ func main() {
 	}
 
 	app := pocketbase.New()
+
+	// Check if we're running with `go run`
+	isGoRun := strings.HasPrefix(os.Args[0], os.TempDir())
+
+	// Register the migrate command
+	migratecmd.MustRegister(app, app.RootCmd, migratecmd.Config{
+		Automigrate: isGoRun, // Auto-migrate during development
+	})
 
 	// Configure Stripe
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")

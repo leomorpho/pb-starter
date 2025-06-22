@@ -33,22 +33,139 @@
 		});
 	}
 
+	// State for error messages
+	let uploadError = $state<string | null>(null);
+
+	// Function to detect actual file type from file header and check for animated PNG
+	async function detectFileType(file: File): Promise<{ type: string; isAnimated: boolean }> {
+		return new Promise((resolve) => {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const arr = new Uint8Array(e.target?.result as ArrayBuffer);
+				let header = '';
+				for (let i = 0; i < Math.min(arr.length, 8); i++) {
+					header += arr[i].toString(16).padStart(2, '0');
+				}
+				
+				// Detect file type by header
+				if (header.startsWith('89504e47')) {
+					// PNG file detected, check if it's animated (APNG)
+					// Look for acTL chunk which indicates animation
+					const fullArray = new Uint8Array(e.target?.result as ArrayBuffer);
+					const isAnimated = checkForAPNG(fullArray);
+					resolve({ type: 'image/png', isAnimated });
+				} else if (header.startsWith('ffd8ff')) {
+					resolve({ type: 'image/jpeg', isAnimated: false });
+				} else if (header.startsWith('47494638')) {
+					resolve({ type: 'image/gif', isAnimated: true }); // GIFs can be animated
+				} else if (header.startsWith('52494646')) {
+					resolve({ type: 'image/webp', isAnimated: false });
+				} else {
+					resolve({ type: 'unknown', isAnimated: false });
+				}
+			};
+			reader.readAsArrayBuffer(file);
+		});
+	}
+
+	// Function to check if PNG is animated (APNG)
+	function checkForAPNG(data: Uint8Array): boolean {
+		// Look for acTL chunk signature in PNG file
+		// acTL = 61 63 54 4C
+		const acTLSignature = [0x61, 0x63, 0x54, 0x4C];
+		
+		for (let i = 0; i < data.length - 4; i++) {
+			if (data[i] === acTLSignature[0] && 
+				data[i + 1] === acTLSignature[1] && 
+				data[i + 2] === acTLSignature[2] && 
+				data[i + 3] === acTLSignature[3]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// Handle file upload
 	async function handleFileUpload(file: File) {
-		if (!authStore.user) return;
-
-		// Validate file
-		const maxSize = 5 * 1024 * 1024; // 5MB
-		const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-		
-		if (file.size > maxSize) {
-			console.error('File size must be less than 5MB');
+		if (!authStore.user) {
+			uploadError = 'User not authenticated';
 			return;
 		}
 
-		if (!allowedTypes.includes(file.type)) {
-			console.error('File must be an image (JPEG, PNG, WebP, or GIF)');
+		// Clear previous errors
+		uploadError = null;
+
+		// Enhanced file validation
+		console.log('File details:', {
+			name: file.name,
+			type: file.type,
+			size: file.size,
+			lastModified: file.lastModified
+		});
+
+		// Check if we have a valid user and auth
+		console.log('Auth details:', {
+			isLoggedIn: authStore.isLoggedIn,
+			userId: authStore.user?.id,
+			userEmail: authStore.user?.email,
+			authValid: pb.authStore.isValid
+		});
+
+		// Check file size
+		const maxSize = 5 * 1024 * 1024; // 5MB
+		if (file.size > maxSize) {
+			uploadError = `File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds 5MB limit`;
 			return;
+		}
+
+		if (file.size === 0) {
+			uploadError = 'File appears to be empty';
+			return;
+		}
+
+		// Check file type
+		const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+		if (!allowedTypes.includes(file.type)) {
+			uploadError = `File type "${file.type}" not supported. Please use JPEG, PNG, WebP, or GIF`;
+			return;
+		}
+
+		// Additional check for file extension
+		const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+		const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+		if (!allowedExtensions.includes(fileExtension)) {
+			uploadError = `File extension "${fileExtension}" not supported`;
+			return;
+		}
+
+		// Verify actual file type by reading file header
+		try {
+			const fileAnalysis = await detectFileType(file);
+			console.log('File analysis:', fileAnalysis, 'vs reported type:', file.type);
+			
+			if (fileAnalysis.type === 'unknown') {
+				uploadError = 'File does not appear to be a valid image';
+				return;
+			}
+			
+			// Check for animated PNG (APNG) which might not be supported
+			if (fileAnalysis.isAnimated && fileAnalysis.type === 'image/png') {
+				uploadError = 'Animated PNG files (APNG) are not supported. Please use a static PNG or convert to GIF for animations.';
+				return;
+			}
+			
+			// Check for animated files in general if we want to restrict them
+			if (fileAnalysis.isAnimated && fileAnalysis.type === 'image/gif') {
+				console.log('Animated GIF detected - this should be supported');
+			}
+			
+			// If detected type doesn't match reported type, log it but continue
+			if (fileAnalysis.type !== file.type) {
+				console.warn('File type mismatch:', { detected: fileAnalysis.type, reported: file.type });
+			}
+		} catch (typeDetectionError) {
+			console.error('Error detecting file type:', typeDetectionError);
+			// Continue anyway - this is just extra validation
 		}
 
 		try {
@@ -58,14 +175,61 @@
 			const formData = new FormData();
 			formData.append('avatar', file);
 
+			console.log('Attempting to upload avatar...', {
+				userId: authStore.user.id,
+				fileName: file.name,
+				fileType: file.type,
+				fileSize: file.size
+			});
+
 			// Update user record with new avatar
-			await pb.collection('users').update(authStore.user.id, formData);
+			const result = await pb.collection('users').update(authStore.user.id, formData);
+			
+			console.log('Upload successful:', result);
 			
 			// Close dialog and refresh
 			showAvatarUploadDialog = false;
 			authStore.syncState();
-		} catch (error) {
+		} catch (error: any) {
 			console.error('Failed to upload avatar:', error);
+			console.error('Error type:', typeof error);
+			console.error('Error keys:', Object.keys(error));
+			
+			// Log the full error structure for debugging
+			if (error?.response) {
+				console.error('Error response:', error.response);
+				console.error('Response status:', error.response?.status);
+				console.error('Response data:', error.response?.data);
+			}
+			
+			// Parse PocketBase error for better user feedback
+			if (error?.response?.data) {
+				const errorData = error.response.data;
+				console.error('PocketBase error details:', errorData);
+				
+				// Check for field-specific errors
+				if (errorData.avatar) {
+					const avatarError = errorData.avatar;
+					if (typeof avatarError === 'object') {
+						uploadError = `Avatar error: ${avatarError.message || avatarError.code || JSON.stringify(avatarError)}`;
+					} else {
+						uploadError = `Avatar error: ${avatarError}`;
+					}
+				} else if (errorData.message) {
+					uploadError = `Upload failed: ${errorData.message}`;
+				} else if (errorData.code) {
+					uploadError = `Upload failed (${errorData.code}): ${errorData.message || 'Server error'}`;
+				} else {
+					// Show the raw error data for debugging
+					uploadError = `Upload failed: ${JSON.stringify(errorData)}`;
+				}
+			} else if (error?.status) {
+				uploadError = `HTTP ${error.status}: ${error.message || 'Server error'}`;
+			} else if (error?.message) {
+				uploadError = `Upload failed: ${error.message}`;
+			} else {
+				uploadError = `Upload failed: ${JSON.stringify(error)}`;
+			}
 		} finally {
 			isUploading = false;
 		}
@@ -138,7 +302,10 @@
 								
 								<!-- Edit Avatar Button -->
 								<button
-									onclick={() => showAvatarUploadDialog = true}
+									onclick={() => {
+										uploadError = null;
+										showAvatarUploadDialog = true;
+									}}
 									class="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors flex items-center justify-center"
 									title="Upload avatar"
 								>
@@ -312,9 +479,22 @@
 				{/if}
 			</div>
 			
+			<!-- Error Message -->
+			{#if uploadError}
+				<div class="mb-4 p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/50 rounded-lg">
+					<p class="text-sm text-red-700 dark:text-red-300 mb-2">{uploadError}</p>
+					<button
+						onclick={() => uploadError = null}
+						class="text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 underline"
+					>
+						Try again
+					</button>
+				</div>
+			{/if}
+
 			<!-- Upload Area -->
 			<div 
-				class="border-2 border-dashed rounded-lg p-8 text-center transition-colors {isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/20'}"
+				class="border-2 border-dashed rounded-lg p-8 text-center transition-colors {isDragOver ? 'border-primary bg-primary/5' : uploadError ? 'border-red-300 bg-red-50/50 dark:border-red-700 dark:bg-red-950/20' : 'border-muted-foreground/20'}"
 				ondrop={handleDrop}
 				ondragover={handleDragOver}
 				ondragleave={handleDragLeave}
@@ -331,12 +511,14 @@
 						</div>
 						<div>
 							<p class="text-sm font-medium mb-1">Drop your image here, or click to browse</p>
-							<p class="text-xs text-muted-foreground">JPEG, PNG, WebP or GIF up to 5MB</p>
+							<p class="text-xs text-muted-foreground">JPEG, PNG (static), WebP or GIF up to 5MB</p>
 							<p class="text-xs text-muted-foreground mt-1">✨ Upload starts automatically when file is selected</p>
+							<p class="text-xs text-muted-foreground">Note: Animated PNG files (APNG) are not supported</p>
 						</div>
 						<button
 							onclick={() => fileInput.click()}
 							class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm"
+							disabled={uploadError !== null}
 						>
 							Choose File
 						</button>

@@ -17,9 +17,20 @@ import {
 } from "@simplewebauthn/browser";
 import { alerts } from "$lib/components/Alerts.svelte";
 
-export const client = new PocketBase(
-  browser ? window.location.origin + base : undefined
-) as TypedPocketBase;
+// Determine the PocketBase URL based on environment
+function getPocketBaseURL() {
+  if (!browser) return undefined;
+  
+  // In development, use localhost:8090
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:8090';
+  }
+  
+  // In production, use the same origin as the frontend
+  return window.location.origin + base;
+}
+
+export const client = new PocketBase(getPocketBaseURL()) as TypedPocketBase;
 
 // For backwards compatibility
 export const pb = client;
@@ -60,8 +71,9 @@ export async function webauthnRegister(
   usernameOrEmail: string
 ): Promise<void | Error> {
   try {
+    const baseURL = getPocketBaseURL();
     const resp = await fetch(
-      `http://localhost:8090/api/webauthn/registration-options?usernameOrEmail=${usernameOrEmail}`
+      `${baseURL}/api/webauthn/registration-options?usernameOrEmail=${usernameOrEmail}`
     );
     if (!resp.ok) {
       const text = await resp.text();
@@ -69,7 +81,7 @@ export async function webauthnRegister(
     }
     const { publicKey: optionsJSON } = await resp.json();
     let attResp = await startRegistration({ optionsJSON });
-    const res = await fetch(`http://localhost:8090/api/webauthn/register`, {
+    const res = await fetch(`${baseURL}/api/webauthn/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -90,8 +102,9 @@ export async function webauthnRegister(
 
 export async function webauthnLogin(usernameOrEmail: string) {
   try {
+    const baseURL = getPocketBaseURL();
     const resp = await fetch(
-      `http://localhost:8090/api/webauthn/login-options?usernameOrEmail=${usernameOrEmail}`
+      `${baseURL}/api/webauthn/login-options?usernameOrEmail=${usernameOrEmail}`
     );
     if (!resp.ok) {
       const text = await resp.text();
@@ -99,7 +112,7 @@ export async function webauthnLogin(usernameOrEmail: string) {
     }
     const { publicKey: optionsJSON } = await resp.json();
     let asseResp = await startAuthentication({ optionsJSON });
-    const res = await fetch(`http://localhost:8090/api/webauthn/login`, {
+    const res = await fetch(`${baseURL}/api/webauthn/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

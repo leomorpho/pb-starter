@@ -1,5 +1,9 @@
+<script lang="ts">
+	import { config } from '$lib/config.js';
+</script>
+
 <svelte:head>
-	<title>Terms of Service - App Name</title>
+	<title>Terms of Service - {config.app.name}</title>
 	<meta name="description" content="Terms of service" />
 </svelte:head>
 

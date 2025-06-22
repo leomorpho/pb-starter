@@ -1,12 +1,32 @@
 <script lang="ts">
 	import '../app.css';
 	import Navigation from '$lib/components/Navigation.svelte';
+	import { authStore } from '$lib/stores/authClient.svelte.js';
+	import { config } from '$lib/config.js';
 
 	let { children } = $props();
+
+	function handleLogout() {
+		console.log('🚪 Logout clicked');
+		authStore.logout();
+	}
+
+	// Debug: Log reactive updates
+	$effect(() => {
+		console.log('📱 Layout reactive update:', {
+			isLoggedIn: authStore.isLoggedIn,
+			user: authStore.user?.email,
+			initialized: authStore.initialized
+		});
+	});
 </script>
 
 <div class="bg-background text-foreground min-h-screen">
-	<Navigation />
+	<Navigation 
+		isLoggedIn={authStore.isLoggedIn}
+		user={authStore.user}
+		onLogout={handleLogout}
+	/>
 
 	<main class="container mx-auto px-4 py-8">
 		{@render children()}
@@ -14,7 +34,7 @@
 
 	<footer class="mt-auto border-t">
 		<div class="text-muted-foreground container mx-auto px-4 py-6 text-center">
-			<p>&copy; 2024 App Name. All rights reserved.</p>
+			<p>&copy; {config.getCurrentYear()} {config.app.name}. All rights reserved.</p>
 		</div>
 	</footer>
 </div>

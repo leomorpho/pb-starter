@@ -1,21 +1,22 @@
 <script lang="ts">
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import { Home, Info, LogIn, LogOut, User } from 'lucide-svelte';
-	import { authStore } from '$lib/stores/authClient.svelte.js';
+	import type { AuthModel } from 'pocketbase';
+	import { config } from '$lib/config.js';
+
+	let {
+		isLoggedIn = false,
+		user = null,
+		onLogout
+	}: {
+		isLoggedIn?: boolean;
+		user?: AuthModel | null;
+		onLogout?: () => void;
+	} = $props();
 
 	function handleLogout() {
-		console.log('🚪 Logout clicked');
-		authStore.logout();
+		onLogout?.();
 	}
-
-	// Debug: Log reactive updates
-	$effect(() => {
-		console.log('📱 Navigation reactive update:', {
-			isLoggedIn: authStore.isLoggedIn,
-			user: authStore.user?.email,
-			initialized: authStore.initialized
-		});
-	});
 </script>
 
 <header class="border-b">
@@ -23,7 +24,7 @@
 		<nav class="flex items-center justify-between">
 			<div class="flex items-center space-x-4">
 				<h1 class="text-xl font-semibold">
-					<a href="/" class="hover:text-primary transition-colors"> App Name </a>
+					<a href="/" class="hover:text-primary transition-colors">{config.app.name}</a>
 				</h1>
 			</div>
 
@@ -43,10 +44,10 @@
 					<Info class="h-4 w-4" />
 				</a>
 
-				{#if authStore.isLoggedIn}
+				{#if isLoggedIn}
 					<div class="flex items-center space-x-2 text-sm">
 						<User class="h-4 w-4" />
-						<span>Welcome, {authStore.user?.name || authStore.user?.email}</span>
+						<span>Welcome, {user?.name || user?.email}</span>
 					</div>
 					<button
 						onclick={handleLogout}

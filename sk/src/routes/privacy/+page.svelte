@@ -1,5 +1,9 @@
+<script lang="ts">
+	import { config } from '$lib/config.js';
+</script>
+
 <svelte:head>
-	<title>Privacy Policy - App Name</title>
+	<title>Privacy Policy - {config.app.name}</title>
 	<meta name="description" content="Privacy policy" />
 </svelte:head>
 

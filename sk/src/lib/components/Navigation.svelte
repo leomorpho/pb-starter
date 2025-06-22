@@ -6,7 +6,6 @@
 	function handleLogout() {
 		console.log('🚪 Logout clicked');
 		authStore.logout();
-		console.log('🚪 Logout completed');
 	}
 
 	// Debug: Log reactive updates

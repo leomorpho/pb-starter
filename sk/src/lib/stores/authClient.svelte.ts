@@ -16,7 +16,6 @@ class ClientAuthStore {
 	}
 
 	#initializeAuth() {
-		console.log('🔧 Initializing auth store...');
 		// PocketBase automatically loads from localStorage on instantiation
 		// We just need to sync our reactive state
 		this.#user = pb.authStore.model;
@@ -24,27 +23,10 @@ class ClientAuthStore {
 		this.#isLoading = false;
 		this.#initialized = true;
 
-		console.log('🔧 Initial auth state:', {
-			user: this.#user?.email,
-			isValid: this.#isValid,
-			isLoggedIn: this.#user !== null && this.#isValid
-		});
-
 		// Listen for PocketBase auth changes
 		pb.authStore.onChange(() => {
-			console.log('🔄 PocketBase onChange triggered:', {
-				oldUser: this.#user?.email,
-				newUser: pb.authStore.model?.email,
-				oldValid: this.#isValid,
-				newValid: pb.authStore.isValid
-			});
 			this.#user = pb.authStore.model;
 			this.#isValid = pb.authStore.isValid;
-			console.log('✅ Auth store updated:', {
-				user: this.#user?.email,
-				isValid: this.#isValid,
-				isLoggedIn: this.#user !== null && this.#isValid
-			});
 		});
 
 		// Try to refresh auth if we have a token
@@ -108,7 +90,7 @@ class ClientAuthStore {
 			// PocketBase automatically saves to localStorage and triggers onChange
 			return { success: true, user: authData.record };
 		} catch (error) {
-			console.error('❌ Login error:', error);
+			console.error('Login error:', error);
 			return {
 				success: false,
 				error: error instanceof Error ? error.message : 'Login failed'
@@ -145,13 +127,8 @@ class ClientAuthStore {
 	}
 
 	logout() {
-		console.log('🚪 Starting logout...');
 		// PocketBase automatically clears localStorage and triggers onChange
 		pb.authStore.clear();
-		console.log('🚪 Logout completed, PocketBase state:', {
-			isValid: pb.authStore.isValid,
-			model: pb.authStore.model
-		});
 
 		// Manual sync in case onChange doesn't fire immediately
 		this.syncState();

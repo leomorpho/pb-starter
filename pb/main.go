@@ -13,6 +13,7 @@ import (
 	"github.com/stripe/stripe-go/v79"
 
 	stripehandlers "pocketbase/internal/stripe"
+	tushandlers "pocketbase/internal/tus"
 	"pocketbase/webauthn"
 	_ "pocketbase/migrations"
 )
@@ -40,8 +41,11 @@ func main() {
 	webauthn.Register(app)
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
-		// Serve static files from the provided public dir (if exists)
-		se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
+		// Initialize TUS handler
+		tusHandler, err := tushandlers.NewTUSHandler(app)
+		if err != nil {
+			log.Fatal("Failed to initialize TUS handler:", err)
+		}
 
 		// Stripe routes
 		se.Router.POST("/create-checkout-session", func(e *core.RequestEvent) error {
@@ -55,6 +59,24 @@ func main() {
 		se.Router.POST("/stripe", func(e *core.RequestEvent) error {
 			return stripehandlers.HandleWebhook(e, app)
 		})
+
+		// TUS upload routes - simple specific routes
+		tusHandlerFunc := func(e *core.RequestEvent) error {
+			tusHandler.ServeHTTP(e.Response, e.Request)
+			return nil
+		}
+		
+		// TUS protocol requires these specific endpoints
+		se.Router.POST("/tus", tusHandlerFunc)      // Create upload
+		se.Router.HEAD("/tus/{id}", tusHandlerFunc) // Get upload info
+		se.Router.PATCH("/tus/{id}", tusHandlerFunc) // Upload chunks
+		se.Router.DELETE("/tus/{id}", tusHandlerFunc) // Cancel upload
+		se.Router.Any("OPTIONS /tus", tusHandlerFunc) // CORS preflight for base
+		se.Router.Any("OPTIONS /tus/{id}", tusHandlerFunc) // CORS preflight for upload
+
+		// Serve static files from the provided public dir (if exists)
+		// This must be registered last as it's a catch-all route
+		se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
 
 		return se.Next()
 	})

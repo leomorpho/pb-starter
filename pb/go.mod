@@ -9,6 +9,7 @@ require (
 	github.com/pocketbase/dbx v1.11.0
 	github.com/pocketbase/pocketbase v0.28.4
 	github.com/stripe/stripe-go/v79 v79.12.0
+	github.com/tus/tusd/v2 v2.5.0
 )
 
 require (

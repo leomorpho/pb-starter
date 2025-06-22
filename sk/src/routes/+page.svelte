@@ -59,86 +59,40 @@
 	];
 
 	onMount(() => {
-		// Hero animations
-		gsap
-			.timeline()
-			.from('.hero-badge', { scale: 0, opacity: 0, duration: 1, ease: 'back.out(2)' })
-			.from('.hero-title', { y: 100, opacity: 0, duration: 1.2, ease: 'power3.out' }, '-=0.5')
-			.from('.hero-subtitle', { y: 50, opacity: 0, duration: 0.8 }, '-=0.6')
-			.from('.hero-desc', { opacity: 0, duration: 0.6 }, '-=0.4')
-			.from('.hero-buttons', { y: 30, opacity: 0, duration: 0.6 }, '-=0.2')
-			.from('.hero-stats', { y: 40, opacity: 0, duration: 0.8, stagger: 0.1 }, '-=0.4');
-
-		// Animate floating blobs
+		// Temporarily disable animations to debug
+		console.log('Component mounted, animations disabled for debugging');
+		
+		// Smooth blob animations - faster pace
 		gsap.to('.blob-1', {
-			x: 'random(-100, 100)',
-			y: 'random(-100, 100)',
-			rotation: 'random(-45, 45)',
-			duration: 'random(8, 12)',
+			x: 'random(-200, 200)',
+			y: 'random(-200, 200)',
+			rotation: 'random(-180, 180)',
+			duration: 'random(2, 5)',
 			repeat: -1,
 			yoyo: true,
 			ease: 'sine.inOut'
 		});
 
 		gsap.to('.blob-2', {
-			x: 'random(-150, 150)',
-			y: 'random(-80, 80)',
-			rotation: 'random(-45, 45)',
-			duration: 'random(10, 14)',
+			x: 'random(-250, 250)',
+			y: 'random(-150, 150)',
+			rotation: 'random(-180, 180)',
+			duration: 'random(2, 7)',
 			repeat: -1,
 			yoyo: true,
 			ease: 'sine.inOut',
-			delay: 2
+			delay: 1
 		});
 
 		gsap.to('.blob-3', {
-			x: 'random(-80, 80)',
-			y: 'random(-120, 120)',
-			rotation: 'random(-45, 45)',
-			duration: 'random(6, 10)',
+			x: 'random(-180, 180)',
+			y: 'random(-220, 220)',
+			rotation: 'random(-180, 180)',
+			duration: 'random(2, 6)',
 			repeat: -1,
 			yoyo: true,
 			ease: 'sine.inOut',
-			delay: 4
-		});
-
-		// Scroll animations
-		gsap.utils.toArray('.fade-up').forEach((element: any) => {
-			gsap.from(element, {
-				y: 60,
-				opacity: 0,
-				duration: 0.8,
-				scrollTrigger: {
-					trigger: element,
-					start: 'top 85%'
-				}
-			});
-		});
-
-		// Feature cards stagger
-		gsap.utils.toArray('.feature-card').forEach((card: any, i: number) => {
-			gsap.from(card, {
-				y: 100,
-				opacity: 0,
-				duration: 1,
-				delay: i * 0.2,
-				scrollTrigger: {
-					trigger: card,
-					start: 'top 80%'
-				}
-			});
-		});
-
-		// Floating animation for feature icons
-		gsap.utils.toArray('.feature-icon').forEach((icon: any) => {
-			gsap.to(icon, {
-				y: -10,
-				duration: 2,
-				repeat: -1,
-				yoyo: true,
-				ease: 'sine.inOut',
-				delay: gsap.utils.random(0, 2)
-			});
+			delay: 1
 		});
 	});
 </script>
@@ -154,7 +108,7 @@
 <!-- Hero Section -->
 <section class="relative min-h-screen flex items-center overflow-hidden bg-background">
 	<!-- Background Effects -->
-	<div class="absolute inset-0 overflow-hidden">
+	<div class="absolute inset-0 overflow-hidden z-0">
 		<div class="blob-1 absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-purple-600/20 rounded-full blur-3xl"></div>
 		<div class="blob-2 absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-r from-pink-400/20 to-rose-600/20 rounded-full blur-3xl"></div>
 		<div class="blob-3 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-green-400/10 to-teal-600/10 rounded-full blur-3xl"></div>
@@ -163,7 +117,7 @@
 		<div class="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 	</div>
 
-	<div class="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center">
+	<div class="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center">
 		<!-- Left Side -->
 		<div class="lg:col-span-7 space-y-8">
 			<div class="hero-badge">
@@ -225,8 +179,8 @@
 		</div>
 
 		<!-- Right Side - Visual Element -->
-		<div class="hidden lg:block lg:col-span-5">
-			<div class="relative">
+		<div class="lg:col-span-5 mt-12 lg:mt-0">
+			<div class="relative max-w-md mx-auto lg:max-w-none">
 				<div class="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-600/20 rounded-3xl transform rotate-6"></div>
 				<div class="relative bg-background/90 backdrop-blur-xl border border-border/50 rounded-3xl p-8 transform -rotate-3 hover:rotate-0 transition-transform duration-700">
 					<div class="space-y-4">
@@ -413,20 +367,16 @@
 </section>
 
 <style>
-	:global(.fade-up) {
-		opacity: 0;
-	}
-	
-	:global(.feature-card) {
-		opacity: 0;
-	}
-	
+	/* Ensure all content is visible */
+	:global(.fade-up),
+	:global(.feature-card),
 	:global(.hero-badge),
 	:global(.hero-title),
 	:global(.hero-subtitle),
 	:global(.hero-desc),
 	:global(.hero-buttons),
 	:global(.hero-stats) {
-		opacity: 0;
+		opacity: 1 !important;
+		transform: none !important;
 	}
 </style>

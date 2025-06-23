@@ -57,6 +57,19 @@ check: ## Run type checking
 	@cd sk && npm run check
 
 # Setup commands
+setup: ## Complete project setup (deps + git hooks + build)
+	@echo "🚀 Setting up PocketBase Starter Kit..."
+	@make deps
+	@echo "🪝 Setting up git pre-commit hook..."
+	@if [ ! -f .git/hooks/pre-commit ]; then \
+		cp scripts/pre-commit .git/hooks/pre-commit 2>/dev/null || \
+		echo '#!/bin/bash\necho "🧪 Running pre-commit tests..."\ncd sk\nif ! npm run test:unit -- --run; then\n    echo "❌ Unit tests failed. Commit aborted."\n    exit 1\nfi\nif ! npm run test:e2e; then\n    echo "❌ E2E tests failed. Commit aborted."\n    exit 1\nfi\necho "✅ All tests passed! Proceeding with commit."' > .git/hooks/pre-commit; \
+	fi
+	@chmod +x .git/hooks/pre-commit
+	@echo "🔧 Building PocketBase backend..."
+	@cd pb && go build
+	@echo "✅ Setup complete! Run 'make dev' to start development."
+
 install: deps ## Install all dependencies
 
 deps: ## Install dependencies for both frontend and backend

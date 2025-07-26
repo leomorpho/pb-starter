@@ -31,8 +31,14 @@ func CreateCheckoutSession(e *core.RequestEvent, app *pocketbase.PocketBase) err
 		return e.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	// Get company ID from user ID
+	companyID, err := getCompanyIDFromUserID(app, data.UserID)
+	if err != nil {
+		return e.JSON(http.StatusInternalServerError, map[string]string{"error": "User must belong to a company"})
+	}
+
 	// Get or create Stripe customer
-	customerID, err := getOrCreateStripeCustomer(app, data.UserID)
+	customerID, err := getOrCreateStripeCustomer(app, companyID)
 	if err != nil {
 		return e.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -54,7 +60,8 @@ func CreateCheckoutSession(e *core.RequestEvent, app *pocketbase.PocketBase) err
 	if data.Mode == "subscription" {
 		params.SubscriptionData = &stripe.CheckoutSessionSubscriptionDataParams{
 			Metadata: map[string]string{
-				"user_id": data.UserID,
+				"company_id": companyID,
+				"user_id":    data.UserID,
 			},
 		}
 	}
@@ -75,8 +82,14 @@ func CreatePortalLink(e *core.RequestEvent, app *pocketbase.PocketBase) error {
 		return e.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
+	// Get company ID from user ID
+	companyID, err := getCompanyIDFromUserID(app, data.UserID)
+	if err != nil {
+		return e.JSON(http.StatusInternalServerError, map[string]string{"error": "User must belong to a company"})
+	}
+
 	// Get Stripe customer ID
-	customerID, err := getStripeCustomerID(app, data.UserID)
+	customerID, err := getStripeCustomerID(app, companyID)
 	if err != nil {
 		return e.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}

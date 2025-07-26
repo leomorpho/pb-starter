@@ -46,9 +46,26 @@ cd pb
 modd               # Watch Go files and auto-restart server
 ```
 
-### PocketBase Migrations
-**IMPORTANT**: Always use PocketBase's built-in migration creation command, then populate the generated file:
+### PocketBase Database Management
 
+**DEFAULT APPROACH**: Use PocketBase Admin UI for database schema management and security rules:
+
+1. **Access Admin UI**: Navigate to `http://localhost:8090/_/` when PocketBase is running
+2. **Create Collections**: Use the visual interface to create and modify collections
+3. **Configure Fields**: Add fields with appropriate types and validation rules
+4. **Set Security Rules**: Configure API rules for list/view/create/update/delete operations
+   - Use rule expressions like `@request.auth.id != ""`
+   - Set field-level permissions for sensitive data
+   - Test rules thoroughly before deployment
+
+**Benefits of Admin UI approach**:
+- Visual interface for schema design
+- Real-time validation of security rules
+- Easy backup/restore of schema via Settings > Export/Import
+- No migration conflicts or versioning issues
+- Immediate testing of API rules
+
+**ALTERNATIVE**: Code-based migrations (only if explicitly requested by developer):
 ```bash
 cd pb
 # Create migration file using PocketBase command
@@ -62,7 +79,7 @@ cd pb
 ./pocketbase migrate history-sync
 ```
 
-**DO NOT** manually create migration files with timestamps - this causes migration tracking issues. Let PocketBase generate the file structure and timestamp, then add your collection/field definitions using the proper PocketBase migration syntax (see existing migrations for examples).
+**Note**: Code-based migrations require careful management and can cause tracking issues if not handled properly. Use only when version control of schema changes is critical.
 
 ## Architecture Overview
 

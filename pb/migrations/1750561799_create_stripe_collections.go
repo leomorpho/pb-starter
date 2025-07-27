@@ -49,9 +49,9 @@ func init() {
 		// Add unique index for stripe_customer_id
 		companies.AddIndex("idx_companies_stripe_customer_id", true, "stripe_customer_id", "")
 
-		// Security rules for companies
-		companies.ListRule = types.Pointer("@request.auth.id != '' && (@request.auth.id = owner_id || @collection.employees.user_id = @request.auth.id && @collection.employees.company_id = id)")
-		companies.ViewRule = types.Pointer("@request.auth.id != '' && (@request.auth.id = owner_id || @collection.employees.user_id = @request.auth.id && @collection.employees.company_id = id)")
+		// Temporarily set simple rules for companies (will update after employees is created)
+		companies.ListRule = types.Pointer("@request.auth.id != '' && @request.auth.id = owner_id")
+		companies.ViewRule = types.Pointer("@request.auth.id != '' && @request.auth.id = owner_id")
 		companies.CreateRule = types.Pointer("@request.auth.id != '' && @request.auth.id = owner_id")
 		companies.UpdateRule = types.Pointer("@request.auth.id = owner_id")
 		companies.DeleteRule = types.Pointer("@request.auth.id = owner_id")
@@ -73,7 +73,7 @@ func init() {
 			&core.RelationField{
 				Name:          "company_id",
 				Required:      true,
-				CollectionId:  "companies",
+				CollectionId:  companies.Id,
 				MaxSelect:     1,
 				CascadeDelete: true,
 			},
@@ -99,6 +99,18 @@ func init() {
 		employees.DeleteRule = types.Pointer("@request.auth.id = @collection.companies.owner_id && company_id = @collection.companies.id")
 
 		if err := app.Save(employees); err != nil {
+			return err
+		}
+
+		// Now update companies collection with full security rules
+		companiesUpdate, err := app.FindCollectionByNameOrId("companies")
+		if err != nil {
+			return err
+		}
+		companiesUpdate.ListRule = types.Pointer("@request.auth.id != '' && (@request.auth.id = owner_id || @collection.employees.user_id = @request.auth.id && @collection.employees.company_id = id)")
+		companiesUpdate.ViewRule = types.Pointer("@request.auth.id != '' && (@request.auth.id = owner_id || @collection.employees.user_id = @request.auth.id && @collection.employees.company_id = id)")
+		
+		if err := app.Save(companiesUpdate); err != nil {
 			return err
 		}
 
@@ -200,7 +212,7 @@ func init() {
 			&core.RelationField{
 				Name:          "company_id",
 				Required:      true,
-				CollectionId:  "companies",
+				CollectionId:  companies.Id,
 				MaxSelect:     1,
 				CascadeDelete: true,
 			},
@@ -228,7 +240,7 @@ func init() {
 			&core.RelationField{
 				Name:          "company_id",
 				Required:      true,
-				CollectionId:  "companies",
+				CollectionId:  companies.Id,
 				MaxSelect:     1,
 				CascadeDelete: true,
 			},

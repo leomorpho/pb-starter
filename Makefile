@@ -6,8 +6,11 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 # Development commands
-dev: ## Start both backend and frontend in development mode
-	@echo "Starting development environment..."
+dev: mailpit-up ## Start full development environment (backend + frontend + mailpit)
+	@echo "🚀 Starting full development environment..."
+	@echo "📧 Mailpit (email testing): http://localhost:8025"
+	@echo "🔧 PocketBase (backend): http://localhost:8090"
+	@echo "🌐 SvelteKit (frontend): http://localhost:5174"
 	@make -j2 dev-backend dev-frontend
 
 dev-backend: ## Start PocketBase backend in watch mode
@@ -98,6 +101,47 @@ clean-deps: ## Remove all dependencies
 	@rm -rf sk/node_modules sk/pnpm-lock.yaml
 	@cd pb && go clean -modcache
 	@echo "Dependencies removed!"
+
+# Email testing with Mailpit
+mailpit: ## Start Mailpit email testing server (foreground)
+	@echo "📧 Starting Mailpit email testing server..."
+	@echo "📧 Web UI: http://localhost:8025"
+	@echo "📧 SMTP: localhost:1025"
+	docker-compose up mailpit
+
+mailpit-up: ## Start Mailpit in background
+	@echo "📧 Checking Mailpit status..."
+	@if curl -s http://localhost:8025 > /dev/null 2>&1; then \
+		echo "📧 Mailpit already running at http://localhost:8025"; \
+	else \
+		echo "📧 Starting Mailpit in background..."; \
+		docker-compose up -d mailpit 2>/dev/null || \
+		docker run -d --name mailpit-shared -p 8025:8025 -p 1025:1025 axllent/mailpit 2>/dev/null || \
+		echo "⚠️  Could not start Mailpit (port may be in use by another service)"; \
+	fi
+	@echo "📧 Mailpit should be available at: http://localhost:8025"
+
+mailpit-down: ## Stop Mailpit
+	@echo "📧 Stopping Mailpit..."
+	@docker-compose down mailpit 2>/dev/null || echo "📧 No docker-compose Mailpit found"
+	@docker stop mailpit-shared 2>/dev/null && docker rm mailpit-shared 2>/dev/null || echo "📧 No shared Mailpit container found"
+	@echo "📧 Mailpit stopped (if it was running from this project)"
+
+mailpit-logs: ## Show Mailpit logs
+	@echo "📧 Showing Mailpit logs..."
+	@docker-compose logs -f mailpit 2>/dev/null || \
+	docker logs -f mailpit-shared 2>/dev/null || \
+	echo "📧 No Mailpit logs found (check if Mailpit is running)"
+
+mailpit-status: ## Check Mailpit status
+	@echo "📧 Checking Mailpit status..."
+	@if curl -s http://localhost:8025 > /dev/null 2>&1; then \
+		echo "✅ Mailpit is running at http://localhost:8025"; \
+		echo "📧 SMTP available at localhost:1025"; \
+	else \
+		echo "❌ Mailpit is not accessible at http://localhost:8025"; \
+		echo "💡 Run 'make mailpit-up' to start it"; \
+	fi
 
 # Utility commands
 logs: ## Show PocketBase logs

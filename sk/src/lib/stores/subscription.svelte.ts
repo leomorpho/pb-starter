@@ -30,7 +30,7 @@ interface Price {
 interface Subscription {
 	id: string;
 	subscription_id: string;
-	user_id: string;
+	company_id: string;
 	status: string;
 	price_id: string;
 	quantity: number;
@@ -139,16 +139,33 @@ class SubscriptionStore {
 		if (!browser || !authStore.user) return;
 
 		try {
+			// First, find the user's company through their employee record
+			const employee = await pb.collection('employees').getFirstListItem(
+				`user_id = "${authStore.user.id}"`,
+				{ expand: 'company_id' }
+			);
+
+			if (!employee || !employee.company_id) {
+				this.#userSubscription = null;
+				return;
+			}
+
+			// Then find the subscription for that company
 			const subscription = await pb.collection('subscriptions').getFirstListItem(
-				`user_id = "${authStore.user.id}" && (status = "active" || status = "trialing")`,
-				{ sort: '-created' }
+				`company_id = "${employee.company_id}" && (status = "active" || status = "trialing")`
 			);
 			this.#userSubscription = subscription as Subscription;
 		} catch (error: any) {
 			// No active subscription found or collection doesn't exist
 			this.#userSubscription = null;
-			if (error?.status === 404 && error?.message?.includes('Missing collection')) {
-				console.warn('Subscriptions collection not available yet. Please import the schema from pb/pb_bootstrap/pb_schema.json');
+			if (error?.status === 404) {
+				if (error?.message?.includes('Missing collection')) {
+					console.warn('Subscriptions collection not available yet. Please import the schema from pb/pb_bootstrap/pb_schema.json');
+				} else {
+					console.log('No active subscription found for user company');
+				}
+			} else {
+				console.warn('Error loading subscription:', error?.message || error);
 			}
 		}
 	}

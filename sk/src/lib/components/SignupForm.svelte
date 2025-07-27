@@ -6,6 +6,7 @@
 	import { cn, type WithElementRef } from '$lib/utils.js';
 	import { authStore } from '$lib/stores/authClient.svelte.js';
 	import { goto } from '$app/navigation';
+	import OTPVerification from './OTPVerification.svelte';
 
 	let {
 		ref = $bindable(null),
@@ -20,6 +21,10 @@
 	let passwordConfirm = $state('');
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
+	
+	// OTP verification state
+	let showOTPVerification = $state(false);
+	let pendingUserID = $state<string | null>(null);
 
 	// Generate unique ID for form fields
 	let formId = $state(Math.random().toString(36).substr(2, 9));
@@ -48,17 +53,51 @@
 		const result = await authStore.signup(email, password, passwordConfirm, name);
 
 		if (result.success) {
-			goto('/dashboard'); // Redirect to dashboard after successful signup
+			// Store user ID for OTP verification
+			pendingUserID = result.user?.id || null;
+			
+			if (pendingUserID) {
+				// Show OTP verification instead of redirecting
+				showOTPVerification = true;
+			} else {
+				error = 'Signup successful but user ID not found';
+			}
 		} else {
 			error = result.error || 'Signup failed';
 		}
 
 		isLoading = false;
 	}
+
+	// Handle successful OTP verification
+	function handleOTPSuccess() {
+		// Refresh auth state to get updated user info
+		authStore.syncState();
+		// Redirect to dashboard
+		goto('/dashboard');
+	}
+
+	// Handle going back from OTP verification
+	function handleOTPCancel() {
+		showOTPVerification = false;
+		pendingUserID = null;
+		// User account was created but not verified - they can try again later
+	}
 </script>
 
 <div class={cn('flex flex-col gap-6', className)} bind:this={ref} {...restProps}>
-	<form onsubmit={handleSubmit}>
+	{#if showOTPVerification && pendingUserID}
+		<!-- OTP Verification Step -->
+		<OTPVerification 
+			userID={pendingUserID}
+			email={email}
+			purpose="signup_verification"
+			onSuccess={handleOTPSuccess}
+			onCancel={handleOTPCancel}
+		/>
+	{:else}
+		<!-- Signup Form -->
+		<form onsubmit={handleSubmit}>
 		<div class="flex flex-col gap-6">
 			<div class="flex flex-col items-center gap-3 text-center">
 				<h1 class="text-2xl font-semibold tracking-tight">Create your account</h1>
@@ -148,13 +187,14 @@
 				</Button>
 			</div>
 		</div>
-	</form>
-	<div class="text-muted-foreground text-center text-xs text-balance">
-		By creating an account, you agree to our <a
-			href="/terms"
-			class="hover:text-primary underline underline-offset-4">Terms of Service</a
-		>
-		and
-		<a href="/privacy" class="hover:text-primary underline underline-offset-4">Privacy Policy</a>.
-	</div>
+		</form>
+		<div class="text-muted-foreground text-center text-xs text-balance">
+			By creating an account, you agree to our <a
+				href="/terms"
+				class="hover:text-primary underline underline-offset-4">Terms of Service</a
+			>
+			and
+			<a href="/privacy" class="hover:text-primary underline underline-offset-4">Privacy Policy</a>.
+		</div>
+	{/if}
 </div>

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -12,6 +13,7 @@ import (
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/stripe/stripe-go/v79"
 
+	otphandlers "pocketbase/internal/otp"
 	stripehandlers "pocketbase/internal/stripe"
 	tushandlers "pocketbase/internal/tus"
 	"pocketbase/webauthn"
@@ -40,6 +42,11 @@ func main() {
 	// Register WebAuthn
 	webauthn.Register(app)
 
+	// Configure SMTP settings on app initialization
+	if err := configureEmailSettings(app); err != nil {
+		log.Printf("Failed to configure SMTP: %v", err)
+	}
+
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		// Initialize TUS handler
 		tusHandler, err := tushandlers.NewTUSHandler(app)
@@ -58,6 +65,15 @@ func main() {
 
 		se.Router.POST("/stripe", func(e *core.RequestEvent) error {
 			return stripehandlers.HandleWebhook(e, app)
+		})
+
+		// OTP routes
+		se.Router.POST("/send-otp", func(e *core.RequestEvent) error {
+			return otphandlers.SendOTPHandler(e, app)
+		})
+
+		se.Router.POST("/verify-otp", func(e *core.RequestEvent) error {
+			return otphandlers.VerifyOTPHandler(e, app)
 		})
 
 		// TUS upload routes - simple specific routes
@@ -84,4 +100,45 @@ func main() {
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// configureEmailSettings sets up SMTP configuration for email verification
+func configureEmailSettings(app *pocketbase.PocketBase) error {
+	// Only configure if SMTP_HOST is set
+	smtpHost := os.Getenv("SMTP_HOST")
+	if smtpHost == "" {
+		log.Println("SMTP_HOST not set, email verification disabled")
+		return nil
+	}
+
+	smtpPort, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
+	if err != nil {
+		smtpPort = 587 // default
+	}
+
+	smtpTLS := os.Getenv("SMTP_TLS") == "true"
+	emailFrom := os.Getenv("EMAIL_FROM")
+	if emailFrom == "" {
+		emailFrom = "noreply@localhost"
+	}
+	emailFromName := os.Getenv("EMAIL_FROM_NAME")
+	if emailFromName == "" {
+		emailFromName = "Pulse"
+	}
+
+	// Configure SMTP settings
+	app.Settings().SMTP.Enabled = true
+	app.Settings().SMTP.Host = smtpHost
+	app.Settings().SMTP.Port = smtpPort
+	app.Settings().SMTP.Username = os.Getenv("SMTP_USERNAME")
+	app.Settings().SMTP.Password = os.Getenv("SMTP_PASSWORD")
+	app.Settings().SMTP.TLS = smtpTLS
+	app.Settings().SMTP.AuthMethod = "PLAIN"
+
+	// Configure email templates
+	app.Settings().Meta.SenderName = emailFromName
+	app.Settings().Meta.SenderAddress = emailFrom
+	
+	log.Printf("SMTP configured: %s:%d (TLS: %v)", smtpHost, smtpPort, smtpTLS)
+	return nil
 }

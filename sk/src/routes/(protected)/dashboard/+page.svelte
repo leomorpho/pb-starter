@@ -29,21 +29,35 @@
 		// Check if user has a company
 		if (authStore.user) {
 			try {
-				const employee = await pb.collection('employees').getFirstListItem(
-					`user_id = "${authStore.user.id}"`,
-					{
-						expand: 'company_id'
-					}
-				);
+				console.log('Looking for employee with user_id:', authStore.user.id);
 				
-				if (employee && employee.expand?.company_id) {
-					hasCompany = true;
-					companyData = employee.expand.company_id;
-					employeeData = employee;
+				// Get employees list (this works based on the logs)
+				const allEmployees = await pb.collection('employees').getList(1, 50);
+				console.log('All employees user can see:', allEmployees);
+				
+				// Find the employee from the list we already have (avoid second request)
+				const employee = allEmployees.items.find(emp => emp.user_id === authStore.user.id);
+				
+				console.log('Employee found:', employee);
+				
+				if (employee && employee.company_id) {
+					// Now get the company separately
+					try {
+						const company = await pb.collection('companies').getOne(employee.company_id);
+						console.log('Company found:', company);
+						
+						hasCompany = true;
+						companyData = company;
+						employeeData = employee;
+					} catch (companyErr) {
+						console.error('Failed to get company:', companyErr);
+					}
+				} else {
+					console.log('Employee found but no company_id:', employee);
 				}
 			} catch (err) {
 				// No employee record found - user needs to create a company
-				console.log('No company found for user');
+				console.log('No employee found for user:', err);
 			} finally {
 				isCheckingCompany = false;
 			}

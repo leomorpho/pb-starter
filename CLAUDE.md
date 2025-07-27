@@ -246,3 +246,80 @@ The following PocketBase collections are automatically managed via webhooks:
 2. Test webhooks: `stripe listen --forward-to=127.0.0.1:8090/stripe`
 3. Create test products in Stripe dashboard
 4. Products/prices automatically sync to PocketBase via webhooks
+
+## Email Verification & Testing
+
+The application includes full email verification support with Mailpit for development testing.
+
+### Email Features
+
+- **User Registration**: Email verification required for new accounts
+- **Email Changes**: Changing email in Personal Account requires verification of new address
+- **Password Reset**: Email-based password reset functionality
+- **Email Templates**: Customizable HTML email templates for all verification flows
+
+### Development Email Testing
+
+**Quick Start**:
+```bash
+# Start full development environment with email testing
+make dev
+# This automatically starts Mailpit at http://localhost:8025
+```
+
+**Manual Setup**:
+```bash
+# Start Mailpit email server
+make mailpit-up
+
+# Start backend and frontend
+make dev-backend
+make dev-frontend
+```
+
+**Mailpit Access**:
+- Web UI: http://localhost:8025 (view all sent emails)
+- SMTP: localhost:1025 (PocketBase sends emails here)
+
+### Email Configuration
+
+Environment variables in `pb/.env`:
+```bash
+# Email Testing (Mailpit)
+SMTP_HOST=localhost
+SMTP_PORT=1025
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_TLS=false
+EMAIL_FROM=noreply@localhost
+EMAIL_FROM_NAME=Pulse
+```
+
+### Email Verification Flow
+
+1. **Registration**: Users receive verification email after signup
+2. **Email Change**: When updating email in Personal Account:
+   - Verification email sent to NEW address
+   - Current email remains active until verification
+   - User must click link in new email to complete change
+3. **Password Reset**: Standard email-based password reset flow
+
+### Testing Email Flows
+
+1. Start development environment: `make dev`
+2. Register new user or change email in dashboard
+3. Check Mailpit at http://localhost:8025 for emails
+4. Click verification links to test complete flow
+
+### Production Email Setup
+
+For production, replace Mailpit with real SMTP service:
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_TLS=true
+EMAIL_FROM=noreply@yourdomain.com
+EMAIL_FROM_NAME=Your App Name
+```

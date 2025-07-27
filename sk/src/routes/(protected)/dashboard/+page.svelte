@@ -6,6 +6,7 @@
 	import { Crown, User, Mail, Calendar, Edit3, Upload, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { getAvatarUrl } from '$lib/files.js';
+	import CompanySetupForm from '$lib/components/CompanySetupForm.svelte';
 
 	// State for editing profile
 	let isEditingProfile = $state(false);
@@ -14,9 +15,36 @@
 	let isDragOver = $state(false);
 	let fileInput: HTMLInputElement;
 
-	// Load subscription data on mount
-	onMount(() => {
+	// Company state
+	let hasCompany = $state(false);
+	let isCheckingCompany = $state(true);
+	let companyData = $state<any>(null);
+
+	// Load subscription and company data on mount
+	onMount(async () => {
 		subscriptionStore.loadData();
+		
+		// Check if user has a company
+		if (authStore.user) {
+			try {
+				const employee = await pb.collection('employees').getFirstListItem(
+					`user_id = "${authStore.user.id}"`,
+					{
+						expand: 'company_id'
+					}
+				);
+				
+				if (employee && employee.expand?.company_id) {
+					hasCompany = true;
+					companyData = employee.expand.company_id;
+				}
+			} catch (err) {
+				// No employee record found - user needs to create a company
+				console.log('No company found for user');
+			} finally {
+				isCheckingCompany = false;
+			}
+		}
 	});
 
 
@@ -269,14 +297,26 @@
 </svelte:head>
 
 <div class="container mx-auto px-4 py-8">
-	<div class="mx-auto max-w-6xl">
-		<!-- Header -->
-		<div class="mb-8">
-			<h1 class="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
-			<p class="text-muted-foreground">Welcome back to your personal space</p>
+	{#if isCheckingCompany}
+		<!-- Loading state -->
+		<div class="flex items-center justify-center min-h-[60vh]">
+			<div class="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
 		</div>
+	{:else if !hasCompany}
+		<!-- Company Setup -->
+		<div class="mx-auto max-w-2xl">
+			<CompanySetupForm onSuccess={() => window.location.reload()} />
+		</div>
+	{:else}
+		<!-- Regular Dashboard -->
+		<div class="mx-auto max-w-6xl">
+			<!-- Header -->
+			<div class="mb-8">
+				<h1 class="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
+				<p class="text-muted-foreground">Welcome back, {companyData?.name || 'your company'}</p>
+			</div>
 
-		<div class="grid gap-8 lg:grid-cols-3">
+			<div class="grid gap-8 lg:grid-cols-3">
 			<!-- Profile Section -->
 			<div class="lg:col-span-1">
 				<div class="bg-card rounded-xl border border-border p-6 shadow-sm">
@@ -385,10 +425,40 @@
 					</div>
 				</div>
 
+				<!-- Company Overview -->
+				<div class="bg-card rounded-xl border border-border p-6 shadow-sm">
+					<h3 class="text-lg font-semibold text-foreground mb-4">Company Overview</h3>
+					<div class="grid gap-4 sm:grid-cols-2">
+						<div class="p-4 bg-muted/50 rounded-lg">
+							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Company Name</h4>
+							<p class="text-foreground">{companyData?.name}</p>
+						</div>
+						
+						<div class="p-4 bg-muted/50 rounded-lg">
+							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Your Role</h4>
+							<p class="text-foreground">Owner</p>
+						</div>
+						
+						{#if companyData?.domain}
+							<div class="p-4 bg-muted/50 rounded-lg">
+								<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Domain</h4>
+								<p class="text-foreground">{companyData.domain}</p>
+							</div>
+						{/if}
+						
+						<div class="p-4 bg-muted/50 rounded-lg">
+							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Plan Status</h4>
+							<p class="text-foreground">
+								{subscriptionStore.isSubscribed ? 'Premium' : 'Free'}
+							</p>
+						</div>
+					</div>
+				</div>
+
 				<!-- Account Overview -->
 				<div class="bg-card rounded-xl border border-border p-6 shadow-sm">
 					<div class="flex items-center justify-between mb-4">
-						<h3 class="text-lg font-semibold text-foreground">Account Overview</h3>
+						<h3 class="text-lg font-semibold text-foreground">Personal Account</h3>
 						<button
 							onclick={() => isEditingProfile = !isEditingProfile}
 							class="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
@@ -407,18 +477,6 @@
 						<div class="p-4 bg-muted/50 rounded-lg">
 							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Name</h4>
 							<p class="text-foreground">{authStore.user?.name || 'Not set'}</p>
-						</div>
-						
-						<div class="p-4 bg-muted/50 rounded-lg">
-							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">User ID</h4>
-							<p class="text-foreground font-mono text-sm">{authStore.user?.id}</p>
-						</div>
-						
-						<div class="p-4 bg-muted/50 rounded-lg">
-							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Status</h4>
-							<p class="text-foreground">
-								{subscriptionStore.isSubscribed ? 'Premium Member' : 'Free Account'}
-							</p>
 						</div>
 					</div>
 				</div>
@@ -444,6 +502,7 @@
 			</div>
 		</div>
 	</div>
+	{/if}
 </div>
 
 <!-- Avatar Upload Dialog -->

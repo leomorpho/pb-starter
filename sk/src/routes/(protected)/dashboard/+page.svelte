@@ -7,9 +7,10 @@
 	import { onMount } from 'svelte';
 	import { getAvatarUrl } from '$lib/files.js';
 	import CompanySetupForm from '$lib/components/CompanySetupForm.svelte';
+	import CompanyOverview from '$lib/components/dashboard/CompanyOverview.svelte';
+	import PersonalAccount from '$lib/components/dashboard/PersonalAccount.svelte';
 
-	// State for editing profile
-	let isEditingProfile = $state(false);
+	// State for avatar upload
 	let showAvatarUploadDialog = $state(false);
 	let isUploading = $state(false);
 	let isDragOver = $state(false);
@@ -19,6 +20,7 @@
 	let hasCompany = $state(false);
 	let isCheckingCompany = $state(true);
 	let companyData = $state<any>(null);
+	let employeeData = $state<any>(null);
 
 	// Load subscription and company data on mount
 	onMount(async () => {
@@ -37,6 +39,7 @@
 				if (employee && employee.expand?.company_id) {
 					hasCompany = true;
 					companyData = employee.expand.company_id;
+					employeeData = employee;
 				}
 			} catch (err) {
 				// No employee record found - user needs to create a company
@@ -426,60 +429,10 @@
 				</div>
 
 				<!-- Company Overview -->
-				<div class="bg-card rounded-xl border border-border p-6 shadow-sm">
-					<h3 class="text-lg font-semibold text-foreground mb-4">Company Overview</h3>
-					<div class="grid gap-4 sm:grid-cols-2">
-						<div class="p-4 bg-muted/50 rounded-lg">
-							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Company Name</h4>
-							<p class="text-foreground">{companyData?.name}</p>
-						</div>
-						
-						<div class="p-4 bg-muted/50 rounded-lg">
-							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Your Role</h4>
-							<p class="text-foreground">Owner</p>
-						</div>
-						
-						{#if companyData?.domain}
-							<div class="p-4 bg-muted/50 rounded-lg">
-								<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Domain</h4>
-								<p class="text-foreground">{companyData.domain}</p>
-							</div>
-						{/if}
-						
-						<div class="p-4 bg-muted/50 rounded-lg">
-							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Plan Status</h4>
-							<p class="text-foreground">
-								{subscriptionStore.isSubscribed ? 'Premium' : 'Free'}
-							</p>
-						</div>
-					</div>
-				</div>
+				<CompanyOverview bind:companyData={companyData} employeeData={employeeData} />
 
-				<!-- Account Overview -->
-				<div class="bg-card rounded-xl border border-border p-6 shadow-sm">
-					<div class="flex items-center justify-between mb-4">
-						<h3 class="text-lg font-semibold text-foreground">Personal Account</h3>
-						<button
-							onclick={() => isEditingProfile = !isEditingProfile}
-							class="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
-						>
-							<Edit3 class="w-4 h-4" />
-							Edit
-						</button>
-					</div>
-
-					<div class="grid gap-4 sm:grid-cols-2">
-						<div class="p-4 bg-muted/50 rounded-lg">
-							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Email</h4>
-							<p class="text-foreground">{authStore.user?.email}</p>
-						</div>
-						
-						<div class="p-4 bg-muted/50 rounded-lg">
-							<h4 class="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-1">Name</h4>
-							<p class="text-foreground">{authStore.user?.name || 'Not set'}</p>
-						</div>
-					</div>
-				</div>
+				<!-- Personal Account -->
+				<PersonalAccount />
 
 				<!-- Recent Activity / Welcome Message -->
 				<div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl border border-blue-200 dark:border-blue-800/50 p-6">

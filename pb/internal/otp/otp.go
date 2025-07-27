@@ -11,6 +11,7 @@ import (
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/mailer"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 // GenerateOTP generates a 6-digit OTP code
@@ -80,7 +81,19 @@ func VerifyOTP(app core.App, userID, otpCode, purpose string) error {
 	}
 
 	// Check if OTP has expired
-	expiresAt := record.Get("expires_at").(time.Time)
+	expiresAtField := record.Get("expires_at")
+	var expiresAt time.Time
+	
+	// Handle both types.DateTime and time.Time
+	switch v := expiresAtField.(type) {
+	case types.DateTime:
+		expiresAt = v.Time()
+	case time.Time:
+		expiresAt = v
+	default:
+		return fmt.Errorf("invalid expires_at field type")
+	}
+	
 	if time.Now().After(expiresAt) {
 		return fmt.Errorf("OTP has expired")
 	}

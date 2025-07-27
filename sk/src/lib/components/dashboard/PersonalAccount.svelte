@@ -90,10 +90,22 @@
 	}
 
 	// Handle email verification success
-	function handleEmailVerificationSuccess() {
+	async function handleEmailVerificationSuccess() {
 		showEmailVerification = false;
-		// Refresh auth state to get updated verification status
-		authStore.syncState();
+		
+		// Fetch the updated user record from the server to get the latest verification status
+		try {
+			if (authStore.user) {
+				const updatedUser = await pb.collection('users').getOne(authStore.user.id);
+				// Update PocketBase's auth store with the fresh user data
+				pb.authStore.save(pb.authStore.token, updatedUser);
+				// Sync our reactive store
+				authStore.syncState();
+			}
+		} catch (error) {
+			console.error('Failed to refresh user data:', error);
+		}
+		
 		personalEditSuccess = 'Email verified successfully!';
 	}
 
